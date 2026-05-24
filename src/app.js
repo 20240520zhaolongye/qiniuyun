@@ -113,6 +113,29 @@ function downloadText(text, fileName) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function downloadDataUrl(dataUrl, fileName) {
+  const link = document.createElement("a");
+  link.href = dataUrl;
+  link.download = fileName;
+  document.body.append(link);
+  link.click();
+  link.remove();
+}
+
+function downloadPng() {
+  const plan = currentPlan || createAssetPlan(readRequest());
+  const offscreen = document.createElement("canvas");
+  renderFrame(offscreen, plan, activeFrame, 1);
+  downloadDataUrl(offscreen.toDataURL("image/png"), `${plan.metadata.assetName}.png`);
+}
+
+function downloadSheet() {
+  const plan = currentPlan || createAssetPlan(readRequest());
+  const offscreen = document.createElement("canvas");
+  renderSheet(offscreen, plan, 1);
+  downloadDataUrl(offscreen.toDataURL("image/png"), `${plan.metadata.assetName}_sheet.png`);
+}
+
 function bindEvents() {
   document.querySelector("#generateBtn").addEventListener("click", generateAsset);
   document.querySelector("#playBtn").addEventListener("click", togglePlay);
@@ -130,8 +153,8 @@ function bindEvents() {
     const plan = currentPlan || createAssetPlan(readRequest());
     downloadText(generateExportJson(plan), `${plan.metadata.assetName}.json`);
   });
-  document.querySelector("#downloadPngBtn").addEventListener("click", () => setStatus("PNG download is available in the final C++ version"));
-  document.querySelector("#downloadSheetBtn").addEventListener("click", () => setStatus("Sprite Sheet download is available in the final C++ version"));
+  document.querySelector("#downloadPngBtn").addEventListener("click", downloadPng);
+  document.querySelector("#downloadSheetBtn").addEventListener("click", downloadSheet);
   document.querySelector("#transparentBtn").addEventListener("click", () => controls.canvasStage.classList.toggle("solid"));
   document.querySelector("#copyPromptBtn").addEventListener("click", async () => {
     await navigator.clipboard.writeText(controls.promptOutput.textContent);
