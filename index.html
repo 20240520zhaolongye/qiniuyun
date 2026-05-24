@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpriteForge 2D 游戏素材生成工具</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>SpriteForge</h1>
+          <p>文本与参数驱动的 2D 游戏素材生成工具</p>
+        </div>
+        <div class="status-pill" id="statusText">Ready</div>
+      </header>
+
+      <section class="workspace">
+        <aside class="panel left-panel">
+          <div class="panel-title">
+            <span>生成参数</span>
+            <button id="randomizeBtn" type="button" title="随机示例">随机</button>
+          </div>
+
+          <label>
+            素材名称
+            <input id="assetName" type="text" value="blue_slime_idle" maxlength="48" />
+          </label>
+
+          <label>
+            文本描述
+            <textarea id="description" rows="5">蓝色史莱姆怪物，圆形身体，微笑表情，适合横版幻想 RPG</textarea>
+          </label>
+
+          <div class="form-grid">
+            <label>
+              素材类型
+              <select id="assetType">
+                <option value="monster">怪物</option>
+                <option value="character">角色</option>
+                <option value="prop">道具</option>
+                <option value="icon">UI 图标</option>
+                <option value="tile">Tile 地块</option>
+                <option value="effect">技能特效</option>
+              </select>
+            </label>
+            <label>
+              美术风格
+              <select id="style">
+                <option value="pixel_art">像素风</option>
+                <option value="cartoon">卡通风</option>
+                <option value="hand_drawn">手绘风</option>
+                <option value="dark_fantasy">黑暗风</option>
+                <option value="chibi">Q 版</option>
+              </select>
+            </label>
+            <label>
+              尺寸
+              <select id="size">
+                <option value="32x32">32x32</option>
+                <option value="16x16">16x16</option>
+                <option value="64x64">64x64</option>
+                <option value="128x128">128x128</option>
+              </select>
+            </label>
+            <label>
+              动画
+              <select id="animation">
+                <option value="idle">待机</option>
+                <option value="walk">行走</option>
+                <option value="attack">攻击</option>
+                <option value="static">静态</option>
+              </select>
+            </label>
+            <label>
+              帧数
+              <input id="frameCount" type="number" min="1" max="8" value="4" />
+            </label>
+            <label>
+              FPS
+              <input id="fps" type="number" min="1" max="24" value="8" />
+            </label>
+          </div>
+
+          <button id="generateBtn" type="button" class="primary-btn">生成素材</button>
+        </aside>
+
+        <section class="preview-area">
+          <div class="toolbar">
+            <div>
+              <strong>素材预览</strong>
+              <span id="previewMeta">32x32 · 4 frames</span>
+            </div>
+            <div class="toolbar-actions">
+              <button id="playBtn" type="button">播放</button>
+              <button id="transparentBtn" type="button">透明</button>
+            </div>
+          </div>
+
+          <div class="canvas-stage">
+            <canvas id="previewCanvas" width="512" height="512"></canvas>
+          </div>
+
+          <div class="sheet-stage">
+            <canvas id="sheetCanvas" width="512" height="128"></canvas>
+          </div>
+
+          <div class="prompt-box">
+            <div class="prompt-header">
+              <strong>结构化 Prompt</strong>
+              <button id="copyPromptBtn" type="button">复制</button>
+            </div>
+            <pre id="promptOutput"></pre>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
