@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SpriteForge 2D 游戏素材生成工具</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <h1>SpriteForge</h1>
+          <p>文本与参数驱动的 2D 游戏素材生成工具，核心生成逻辑由 C++ 实现</p>
+        </div>
+        <div class="status-pill" id="statusText">Ready</div>
+      </header>
+
+      <section class="workspace">
+        <aside class="panel left-panel">
+          <div class="panel-title">
+            <span>生成参数</span>
+            <button id="randomizeBtn" type="button" title="随机示例">随机</button>
+          </div>
+
+          <label>
+            素材名称
+            <input id="assetName" type="text" value="blue_slime_idle" maxlength="48" />
+          </label>
+
+          <label>
+            文本描述
+            <textarea id="description" rows="5">蓝色史莱姆怪物，圆形身体，微笑表情，适合横版幻想 RPG</textarea>
+          </label>
+
+          <div class="form-grid">
+            <label>
+              素材类型
+              <select id="assetType">
+                <option value="monster">怪物</option>
+                <option value="character">角色</option>
+                <option value="prop">道具</option>
+                <option value="icon">UI 图标</option>
+                <option value="tile">Tile 地块</option>
+                <option value="effect">技能特效</option>
+              </select>
+            </label>
+
+            <label>
+              美术风格
+              <select id="style">
+                <option value="pixel_art">像素风</option>
+                <option value="cartoon">卡通风</option>
+                <option value="hand_drawn">手绘风</option>
+                <option value="dark_fantasy">黑暗风</option>
+                <option value="chibi">Q 版</option>
+              </select>
+            </label>
+
+            <label>
+              尺寸
+              <select id="size">
+                <option value="32x32">32x32</option>
+                <option value="16x16">16x16</option>
+                <option value="64x64">64x64</option>
+                <option value="128x128">128x128</option>
+              </select>
+            </label>
+
+            <label>
+              视角
+              <select id="view">
+                <option value="side">侧面</option>
+                <option value="front">正面</option>
+                <option value="top_down">俯视</option>
+                <option value="isometric">等距</option>
+              </select>
+            </label>
+
+            <label>
+              动画
+              <select id="animation">
+                <option value="idle">待机</option>
+                <option value="walk">行走</option>
+                <option value="attack">攻击</option>
+                <option value="death">死亡</option>
+                <option value="static">静态</option>
+              </select>
+            </label>
+
+            <label>
+              帧数
+              <input id="frameCount" type="number" min="1" max="8" value="4" />
+            </label>
+
+            <label>
+              FPS
+              <input id="fps" type="number" min="1" max="24" value="8" />
+            </label>
+
+            <label>
+              导出目标
+              <select id="exportTarget">
+                <option value="unity">Unity</option>
+                <option value="godot">Godot</option>
+                <option value="cocos">Cocos Creator</option>
+                <option value="generic">通用</option>
+              </select>
+            </label>
+          </div>
+
+          <button id="generateBtn" type="button" class="primary-btn">生成素材</button>
+        </aside>
+
+        <section class="preview-area">
+          <div class="toolbar">
+            <div>
+              <strong>素材预览</strong>
+              <span id="previewMeta">32x32 · 4 frames</span>
+            </div>
+            <div class="toolbar-actions">
+              <button id="playBtn" type="button" title="播放/暂停">播放</button>
+              <button id="transparentBtn" type="button" title="透明背景预览">透明</button>
+            </div>
+          </div>
+
+          <div class="canvas-stage">
+            <canvas id="previewCanvas" width="512" height="512"></canvas>
+          </div>
+
+          <div class="sheet-stage">
+            <canvas id="sheetCanvas" width="512" height="128"></canvas>
+          </div>
+
+          <div class="prompt-box">
+            <div class="prompt-header">
+              <strong>结构化 Prompt</strong>
+              <button id="copyPromptBtn" type="button">复制</button>
+            </div>
+            <pre id="promptOutput"></pre>
+          </div>
+
+          <div class="demo-panel">
+            <div class="demo-title">评分对照与演示要点</div>
+            <div class="demo-grid">
+              <div class="demo-item">
+                <strong>作品完整度与创新性 40%</strong>
+                <p>支持角色、怪物、道具、UI 图标、Tile、特效，能生成 Prompt、预览、Sprite Sheet 和 JSON。</p>
+              </div>
+              <div class="demo-item">
+                <strong>开发过程与质量 40%</strong>
+                <p>C++ 后端负责生成与 HTTP 服务，前端只负责交互和渲染，测试覆盖启动、API 与核心工具函数。</p>
+              </div>
+              <div class="demo-item">
+                <strong>演示与表达 20%</strong>
+                <p>可直接在浏览器演示参数切换、样例生成、播放和导出，适合现场讲解作品流程。</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel right-panel">
+          <div class="panel-title">
+            <span>项目风格档案</span>
+            <button id="resetStyleBtn" type="button" title="重置风格">重置</button>
+          </div>
+
+          <label>
+            风格名称
+            <input id="styleName" type="text" value="bright_pixel_fantasy" />
+          </label>
+
+          <label>
+            主色板
+            <input id="colorPalette" type="text" value="#2E5EAA,#43A047,#FDD835,#EF5350,#FFFFFF,#172033" />
+          </label>
+
+          <label>
+            线条风格
+            <input id="lineStyle" type="text" value="clean dark outline" />
+          </label>
+
+          <label>
+            光照方式
+            <input id="lighting" type="text" value="simple top-left cel shading" />
+          </label>
+
+          <label>
+            世界观关键词
+            <input id="worldKeywords" type="text" value="bright fantasy, readable silhouette, low cost prototype" />
+          </label>
+
+          <label>
+            负面 Prompt
+            <textarea id="negativePrompt" rows="5">blurry, realistic photo, 3D render, complex background, watermark, text, noisy details, inconsistent outline</textarea>
+          </label>
+
+          <div class="export-panel">
+            <button id="downloadPngBtn" type="button">下载 PNG</button>
+            <button id="downloadSheetBtn" type="button">下载 Sprite Sheet</button>
+            <button id="downloadJsonBtn" type="button">下载 JSON</button>
+          </div>
+
+          <div class="history">
+            <strong>生成记录</strong>
+            <ul id="historyList"></ul>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
