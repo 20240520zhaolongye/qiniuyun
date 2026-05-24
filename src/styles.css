@@ -58,9 +58,38 @@ button {
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(280px, 340px) 1fr;
+  grid-template-columns: minmax(280px, 340px) 1fr minmax(280px, 340px);
   gap: 18px;
   padding: 18px;
+}
+
+.export-panel {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.history {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.history ul {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.history li {
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .panel, .preview-area {
@@ -189,6 +218,6 @@ input, select, textarea {
   font-size: 12px;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1120px) {
   .workspace { grid-template-columns: 1fr; }
 }

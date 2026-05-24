@@ -16,8 +16,15 @@ const controls = {
   animation: document.querySelector("#animation"),
   frameCount: document.querySelector("#frameCount"),
   fps: document.querySelector("#fps"),
+  styleName: document.querySelector("#styleName"),
+  colorPalette: document.querySelector("#colorPalette"),
+  lineStyle: document.querySelector("#lineStyle"),
+  lighting: document.querySelector("#lighting"),
+  worldKeywords: document.querySelector("#worldKeywords"),
+  negativePrompt: document.querySelector("#negativePrompt"),
   previewMeta: document.querySelector("#previewMeta"),
   promptOutput: document.querySelector("#promptOutput"),
+  historyList: document.querySelector("#historyList"),
   previewCanvas: document.querySelector("#previewCanvas"),
   sheetCanvas: document.querySelector("#sheetCanvas"),
   canvasStage: document.querySelector(".canvas-stage")
@@ -59,7 +66,17 @@ function generateAsset() {
   activeFrame = 0;
   controls.promptOutput.textContent = currentPlan.prompt;
   renderCurrent(0);
+  addHistory(currentPlan.metadata.assetName, currentPlan.metadata.assetType, currentPlan.metadata.style);
   setStatus("Generated");
+}
+
+function addHistory(name, type, style) {
+  const item = document.createElement("li");
+  item.textContent = `${new Date().toLocaleTimeString()} · ${name} · ${type} · ${style}`;
+  controls.historyList.prepend(item);
+  while (controls.historyList.children.length > 8) {
+    controls.historyList.lastElementChild.remove();
+  }
 }
 
 function togglePlay() {
@@ -100,6 +117,21 @@ function bindEvents() {
   document.querySelector("#generateBtn").addEventListener("click", generateAsset);
   document.querySelector("#playBtn").addEventListener("click", togglePlay);
   document.querySelector("#randomizeBtn").addEventListener("click", applySample);
+  document.querySelector("#resetStyleBtn").addEventListener("click", () => {
+    controls.styleName.value = "bright_pixel_fantasy";
+    controls.colorPalette.value = "#2E5EAA,#43A047,#FDD835,#EF5350,#FFFFFF,#172033";
+    controls.lineStyle.value = "clean dark outline";
+    controls.lighting.value = "simple top-left cel shading";
+    controls.worldKeywords.value = "bright fantasy, readable silhouette, low cost prototype";
+    controls.negativePrompt.value = "blurry, realistic photo, 3D render, complex background, watermark, text, noisy details, inconsistent outline";
+    generateAsset();
+  });
+  document.querySelector("#downloadJsonBtn").addEventListener("click", () => {
+    const plan = currentPlan || createAssetPlan(readRequest());
+    downloadText(generateExportJson(plan), `${plan.metadata.assetName}.json`);
+  });
+  document.querySelector("#downloadPngBtn").addEventListener("click", () => setStatus("PNG download is available in the final C++ version"));
+  document.querySelector("#downloadSheetBtn").addEventListener("click", () => setStatus("Sprite Sheet download is available in the final C++ version"));
   document.querySelector("#transparentBtn").addEventListener("click", () => controls.canvasStage.classList.toggle("solid"));
   document.querySelector("#copyPromptBtn").addEventListener("click", async () => {
     await navigator.clipboard.writeText(controls.promptOutput.textContent);

@@ -114,6 +114,54 @@
             <pre id="promptOutput"></pre>
           </div>
         </section>
+
+        <aside class="panel right-panel">
+          <div class="panel-title">
+            <span>项目风格档案</span>
+            <button id="resetStyleBtn" type="button" title="重置风格">重置</button>
+          </div>
+
+          <label>
+            风格名称
+            <input id="styleName" type="text" value="bright_pixel_fantasy" />
+          </label>
+
+          <label>
+            主色板
+            <input id="colorPalette" type="text" value="#2E5EAA,#43A047,#FDD835,#EF5350,#FFFFFF,#172033" />
+          </label>
+
+          <label>
+            线条风格
+            <input id="lineStyle" type="text" value="clean dark outline" />
+          </label>
+
+          <label>
+            光照方式
+            <input id="lighting" type="text" value="simple top-left cel shading" />
+          </label>
+
+          <label>
+            世界观关键词
+            <input id="worldKeywords" type="text" value="bright fantasy, readable silhouette, low cost prototype" />
+          </label>
+
+          <label>
+            负面 Prompt
+            <textarea id="negativePrompt" rows="5">blurry, realistic photo, 3D render, complex background, watermark, text, noisy details, inconsistent outline</textarea>
+          </label>
+
+          <div class="export-panel">
+            <button id="downloadPngBtn" type="button">下载 PNG</button>
+            <button id="downloadSheetBtn" type="button">下载 Sprite Sheet</button>
+            <button id="downloadJsonBtn" type="button">下载 JSON</button>
+          </div>
+
+          <div class="history">
+            <strong>生成记录</strong>
+            <ul id="historyList"></ul>
+          </div>
+        </aside>
       </section>
     </main>
 
