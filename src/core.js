@@ -5,6 +5,7 @@ export const SAMPLE_REQUESTS = [
     description: "蓝色史莱姆怪物，圆形身体，微笑表情，适合横版幻想 RPG",
     style: "pixel_art",
     size: "32x32",
+    view: "side",
     animation: "idle",
     frameCount: 4
   },
@@ -14,15 +15,43 @@ export const SAMPLE_REQUESTS = [
     description: "绿色宝石短剑图标，金属剑刃，木质握柄，适合背包 UI",
     style: "cartoon",
     size: "64x64",
+    view: "front",
     animation: "static",
     frameCount: 1
+  },
+  {
+    assetName: "grass_tile",
+    assetType: "tile",
+    description: "明亮草地地面块，带少量小花和泥土边缘，可拼接",
+    style: "pixel_art",
+    size: "32x32",
+    view: "top_down",
+    animation: "static",
+    frameCount: 1
+  },
+  {
+    assetName: "fireball_cast",
+    assetType: "effect",
+    description: "橙红色火球技能特效，从小火苗逐渐膨胀",
+    style: "cartoon",
+    size: "64x64",
+    view: "side",
+    animation: "attack",
+    frameCount: 6
   }
 ];
 
-export function parseSize(size) {
-  const match = /^(\d+)x(\d+)$/i.exec(String(size).trim());
-  if (!match) throw new Error(`Invalid size: ${size}`);
-  return { width: Number(match[1]), height: Number(match[2]) };
+export function normalizePalette(input) {
+  const colors = Array.isArray(input) ? input : String(input || "").split(",");
+  const normalized = colors
+    .map((color) => color.trim())
+    .filter(Boolean)
+    .filter((color) => /^#[0-9a-f]{6}$/i.test(color))
+    .map((color) => color.toUpperCase());
+
+  return normalized.length > 0
+    ? normalized
+    : ["#2E5EAA", "#43A047", "#FDD835", "#EF5350", "#FFFFFF", "#172033"];
 }
 
 export function sanitizeFileName(value) {
@@ -31,24 +60,6 @@ export function sanitizeFileName(value) {
     .replace(/\s+/g, "_")
     .replace(/[^\w\u4e00-\u9fa5-]/g, "")
     .slice(0, 64) || "asset";
-}
-
-export function normalizePalette(input) {
-  const colors = Array.isArray(input) ? input : String(input || "").split(",");
-  const normalized = colors
-    .map((color) => color.trim())
-    .filter((color) => /^#[0-9a-f]{6}$/i.test(color));
-  return normalized.length ? normalized : ["#2E5EAA", "#43A047", "#FDD835", "#EF5350", "#FFFFFF", "#172033"];
-}
-
-export function makeSeed(input) {
-  const text = JSON.stringify(input);
-  let hash = 2166136261;
-  for (let index = 0; index < text.length; index += 1) {
-    hash ^= text.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
 }
 
 export function createRandom(seed) {
@@ -62,49 +73,25 @@ export function createRandom(seed) {
   };
 }
 
-export function buildPrompt(request) {
-  const size = parseSize(request.size);
-  return [
-    `Generate a ${size.width}x${size.height} ${request.style} 2D game asset.`,
-    `Asset type: ${request.assetType}`,
-    `Description: ${request.description}`,
-    "Background: transparent",
-    `Animation: ${request.frameCount > 1 ? `${request.animation} animation, ${request.frameCount} frames` : "single static frame"}`,
-    "Requirements: game-ready, centered, readable silhouette, no text, no watermark"
-  ].join("\n");
-}
+export async function createAssetPlan(request, styleProfile) {
+  const response = await fetch("/api/plan", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ request, styleProfile })
+  });
 
-export function createAssetPlan(request) {
-  const size = parseSize(request.size);
-  const frameCount = Math.max(1, Math.min(8, Number(request.frameCount) || 1));
-  return {
-    seed: makeSeed(request),
-    prompt: buildPrompt({ ...request, frameCount }),
-    metadata: {
-      assetName: sanitizeFileName(request.assetName),
-      assetType: request.assetType,
-      style: request.style,
-      frameWidth: size.width,
-      frameHeight: size.height,
-      frameCount,
-      fps: Math.max(1, Math.min(24, Number(request.fps) || 8))
-    },
-    draw: {
-      palette: normalizePalette(),
-      renderMode: request.style === "pixel_art" ? "pixel" : "smooth",
-      assetType: request.assetType,
-      animation: request.animation
-    }
-  };
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || `C++ generator failed with ${response.status}`);
+  }
+
+  return response.json();
 }
 
 export function generateExportJson(plan) {
-  return JSON.stringify({
-    ...plan.metadata,
-    files: {
-      png: `${plan.metadata.assetName}.png`,
-      spriteSheet: `${plan.metadata.assetName}_sheet.png`,
-      metadata: `${plan.metadata.assetName}.json`
-    }
-  }, null, 2);
+  return plan.exportJson || JSON.stringify(plan.metadata, null, 2);
+}
+
+export function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
 }

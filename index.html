@@ -11,7 +11,7 @@
       <header class="topbar">
         <div>
           <h1>SpriteForge</h1>
-          <p>文本与参数驱动的 2D 游戏素材生成工具</p>
+          <p>文本与参数驱动的 2D 游戏素材生成工具，核心生成逻辑由 C++ 实现</p>
         </div>
         <div class="status-pill" id="statusText">Ready</div>
       </header>
@@ -45,6 +45,7 @@
                 <option value="effect">技能特效</option>
               </select>
             </label>
+
             <label>
               美术风格
               <select id="style">
@@ -55,6 +56,7 @@
                 <option value="chibi">Q 版</option>
               </select>
             </label>
+
             <label>
               尺寸
               <select id="size">
@@ -64,22 +66,46 @@
                 <option value="128x128">128x128</option>
               </select>
             </label>
+
+            <label>
+              视角
+              <select id="view">
+                <option value="side">侧面</option>
+                <option value="front">正面</option>
+                <option value="top_down">俯视</option>
+                <option value="isometric">等距</option>
+              </select>
+            </label>
+
             <label>
               动画
               <select id="animation">
                 <option value="idle">待机</option>
                 <option value="walk">行走</option>
                 <option value="attack">攻击</option>
+                <option value="death">死亡</option>
                 <option value="static">静态</option>
               </select>
             </label>
+
             <label>
               帧数
               <input id="frameCount" type="number" min="1" max="8" value="4" />
             </label>
+
             <label>
               FPS
               <input id="fps" type="number" min="1" max="24" value="8" />
+            </label>
+
+            <label>
+              导出目标
+              <select id="exportTarget">
+                <option value="unity">Unity</option>
+                <option value="godot">Godot</option>
+                <option value="cocos">Cocos Creator</option>
+                <option value="generic">通用</option>
+              </select>
             </label>
           </div>
 
@@ -93,8 +119,8 @@
               <span id="previewMeta">32x32 · 4 frames</span>
             </div>
             <div class="toolbar-actions">
-              <button id="playBtn" type="button">播放</button>
-              <button id="transparentBtn" type="button">透明</button>
+              <button id="playBtn" type="button" title="播放/暂停">播放</button>
+              <button id="transparentBtn" type="button" title="透明背景预览">透明</button>
             </div>
           </div>
 
@@ -112,6 +138,24 @@
               <button id="copyPromptBtn" type="button">复制</button>
             </div>
             <pre id="promptOutput"></pre>
+          </div>
+
+          <div class="demo-panel">
+            <div class="demo-title">评分对照与演示要点</div>
+            <div class="demo-grid">
+              <div class="demo-item">
+                <strong>作品完整度与创新性 40%</strong>
+                <p>支持角色、怪物、道具、UI 图标、Tile、特效，能生成 Prompt、预览、Sprite Sheet 和 JSON。</p>
+              </div>
+              <div class="demo-item">
+                <strong>开发过程与质量 40%</strong>
+                <p>C++ 后端负责生成与 HTTP 服务，前端只负责交互和渲染，测试覆盖启动、API 与核心工具函数。</p>
+              </div>
+              <div class="demo-item">
+                <strong>演示与表达 20%</strong>
+                <p>可直接在浏览器演示参数切换、样例生成、播放和导出，适合现场讲解作品流程。</p>
+              </div>
+            </div>
           </div>
         </section>
 

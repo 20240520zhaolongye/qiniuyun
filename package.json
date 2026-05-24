@@ -4,7 +4,9 @@
   "private": true,
   "description": "A zero-dependency 2D game asset generator MVP for text and parameter driven sprite creation.",
   "scripts": {
-    "start": "node server.js",
+    "start": "powershell -ExecutionPolicy Bypass -File scripts/start-cpp.ps1",
+    "start:node": "node server.js",
+    "build": "powershell -ExecutionPolicy Bypass -File scripts/build-cpp.ps1",
     "test": "node --test tests/*.test.js"
   },
   "keywords": [
