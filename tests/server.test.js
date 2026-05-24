@@ -68,6 +68,8 @@ test("static server serves the app shell and modules", async () => {
     const health = await healthResponse.json();
     assert.equal(health.service, "SpriteForge C++");
     assert.equal(plan.metadata.assetName, "blue_slime_idle");
+    assert.equal(plan.draw.style, "pixel_art");
+    assert.equal(plan.draw.lineStyle, "clean dark outline");
     assert.equal(plan.export.files.png, "blue_slime_idle.png");
     assert.match(plan.prompt, /32x32 pixel art/);
   } finally {

@@ -13,13 +13,13 @@
           <h1>SpriteForge</h1>
           <p>文本与参数驱动的 2D 游戏素材生成工具，核心生成逻辑由 C++ 实现</p>
         </div>
-        <div class="status-pill" id="statusText">Ready</div>
+        <div class="status-pill" id="statusText">准备就绪</div>
       </header>
 
       <section class="workspace">
         <aside class="panel left-panel">
           <div class="panel-title">
-            <span>生成参数</span>
+            <span>1. 生成参数</span>
             <button id="randomizeBtn" type="button" title="随机示例">随机</button>
           </div>
 
@@ -115,8 +115,8 @@
         <section class="preview-area">
           <div class="toolbar">
             <div>
-              <strong>素材预览</strong>
-              <span id="previewMeta">32x32 · 4 frames</span>
+              <strong>2. 预览与 Prompt</strong>
+              <span id="previewMeta">32x32 · 4 帧</span>
             </div>
             <div class="toolbar-actions">
               <button id="playBtn" type="button" title="播放/暂停">播放</button>
@@ -144,7 +144,7 @@
 
         <aside class="panel right-panel">
           <div class="panel-title">
-            <span>项目风格档案</span>
+            <span>3. 风格与导出</span>
             <button id="resetStyleBtn" type="button" title="重置风格">重置</button>
           </div>
 
@@ -179,6 +179,7 @@
           </label>
 
           <div class="export-panel">
+            <strong>下载文件</strong>
             <button id="downloadPngBtn" type="button">下载 PNG</button>
             <button id="downloadSheetBtn" type="button">下载 Sprite Sheet</button>
             <button id="downloadJsonBtn" type="button">下载 JSON</button>

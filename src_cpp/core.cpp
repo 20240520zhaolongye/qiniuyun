@@ -211,7 +211,11 @@ Plan create_asset_plan(const Request& request, const StyleProfile& style_profile
                                  {"frameCount", frame_count},
                                  {"fps", fps},
                                  {"exportTarget", request.exportTarget}}},
-      {"palette", palette_to_json(effective_palette)}};
+      {"styleProfile", Json::Object{{"styleName", style_profile.styleName},
+                                     {"palette", palette_to_json(effective_palette)},
+                                     {"lineStyle", style_profile.lineStyle},
+                                     {"lighting", style_profile.lighting},
+                                     {"worldKeywords", style_profile.worldKeywords}}}};
 
   Plan plan;
   plan.seed = make_seed(seed_input);
@@ -233,6 +237,10 @@ Plan create_asset_plan(const Request& request, const StyleProfile& style_profile
       {"palette", palette_to_json(effective_palette)},
       {"renderMode", request.style == "pixel_art" ? "pixel" : "smooth"},
       {"assetType", request.assetType},
+      {"style", request.style},
+      {"styleName", style_profile.styleName},
+      {"lineStyle", style_profile.lineStyle},
+      {"lighting", style_profile.lighting},
       {"animation", request.animation},
       {"view", request.view}};
   return plan;
