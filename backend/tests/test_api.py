@@ -110,3 +110,42 @@ def test_mock_generator_prefers_text_subject_for_sword():
     assert center_pixel[3] > 0
     assert lower_pixel[3] > 0
     assert isinstance(frame, Image.Image)
+
+
+def test_ai_generator_falls_back_to_mock_when_comfyui_unavailable(tmp_path, monkeypatch):
+    from app.services.ai_generator import save_outputs
+
+    workflow_path = tmp_path / "workflow.json"
+    workflow_path.write_text(json.dumps({"1": {"inputs": {"text": ""}}}), encoding="utf-8")
+    monkeypatch.setenv("SPRITEFORGE_AI_PROVIDER", "comfyui")
+    monkeypatch.setenv("COMFYUI_BASE_URL", "http://127.0.0.1:9")
+    monkeypatch.setenv("COMFYUI_WORKFLOW_PATH", str(workflow_path))
+    monkeypatch.setenv("SPRITEFORGE_AI_FALLBACK", "mock")
+
+    plan = {
+        "seed": 1,
+        "prompt": "素材描述：剑",
+        "metadata": {
+            "assetName": "fallback_sword",
+            "assetType": "monster",
+            "style": "pixel_art",
+            "frameWidth": 128,
+            "frameHeight": 128,
+            "frameCount": 1,
+            "animationName": "idle",
+            "fps": 8,
+        },
+        "draw": {
+            "assetType": "monster",
+            "description": "剑",
+            "assetName": "fallback_sword",
+            "palette": ["#2E5EAA", "#43A047", "#FDD835", "#EF5350", "#FFFFFF", "#172033"],
+            "view": "side",
+            "animation": "idle",
+        },
+    }
+
+    files = save_outputs(plan, tmp_path)
+    assert Path(files["png"]).exists()
+    assert Path(files["sheet"]).exists()
+    assert plan["metadata"]["generationProvider"] == "mock_fallback"

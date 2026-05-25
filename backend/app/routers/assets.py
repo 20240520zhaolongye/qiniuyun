@@ -5,9 +5,10 @@ from fastapi.responses import FileResponse
 
 from app.database import create_asset_record, get_asset_record, list_asset_records
 from app.schemas import GeneratePayload, GenerateResponse
+from app.services.ai_generator import AiGenerationError
+from app.services.ai_generator import save_outputs
 from app.services.cpp_engine import CppEngineError, create_plan
 from app.services.exporter import EXPORT_DIR, write_metadata
-from app.services.mock_generator import save_outputs
 
 router = APIRouter(prefix="/assets", tags=["assets"])
 
@@ -29,7 +30,10 @@ def generate_asset(payload: GeneratePayload) -> GenerateResponse:
 
     metadata = plan["metadata"]
     output_dir = EXPORT_DIR / metadata["assetName"]
-    generated_files = save_outputs(plan, output_dir)
+    try:
+        generated_files = save_outputs(plan, output_dir)
+    except AiGenerationError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
     metadata_path = write_metadata(plan, output_dir)
     stored_files = {
         "png": generated_files["png"],
