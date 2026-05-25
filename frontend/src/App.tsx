@@ -133,13 +133,18 @@ function App() {
           <div className="mb-3 flex items-center justify-between">
             <strong>预览</strong>
             <span className="text-sm text-[#6d7180]">
-              {plan ? `${plan.metadata.frameWidth}x${plan.metadata.frameHeight} · ${plan.metadata.frameCount} 帧 · ${plan.metadata.fps} FPS` : "等待生成"}
+              {plan
+                ? `${plan.metadata.frameWidth}x${plan.metadata.frameHeight} · ${plan.metadata.frameCount} 帧 · ${plan.metadata.fps} FPS${
+                    plan.metadata.generationProvider ? ` · ${plan.metadata.generationProvider}` : ""
+                  }`
+                : "等待生成"}
             </span>
           </div>
           <div className="min-h-[520px] rounded border border-[#d8cfbf] bg-[#eef2f6] p-4">
             <div ref={canvasRef} />
             {previewError ? <p className="mt-3 text-sm text-red-700">{previewError}</p> : null}
           </div>
+          {plan?.metadata.generationWarning ? <p className="mt-3 text-sm text-amber-700">生成已回退到 Mock：{plan.metadata.generationWarning}</p> : null}
           <label className="mt-4 block text-sm">
             Prompt
             <textarea

@@ -33,6 +33,8 @@ export type AssetPlan = {
     animationName: string;
     fps: number;
     exportTarget: string;
+    generationProvider?: string;
+    generationWarning?: string;
   };
 };
 

@@ -52,6 +52,8 @@ def generate_frames(plan: dict[str, Any]) -> list[Image.Image]:
             _draw_coin(draw, width, height, palette)
         elif subject == "chest":
             _draw_chest(draw, width, height, palette)
+        elif subject == "humanoid":
+            _draw_humanoid(draw, width, height, palette, progress, animation)
         elif asset_type == "tile":
             _draw_tile(draw, width, height, palette, rng)
         elif asset_type == "icon":
@@ -70,6 +72,9 @@ def generate_frames(plan: dict[str, Any]) -> list[Image.Image]:
 
 def _infer_subject(prompt: str, description: str, asset_name: str, asset_type: str) -> str:
     text = f"{prompt} {description} {asset_name}".lower()
+    description_text = f"{prompt} {description}".lower()
+    if any(keyword in description_text for keyword in ("美少女", "少女", "女孩", "女生", "女主", "anime girl", "girl", "waifu", "角色")):
+        return "humanoid"
     if any(keyword in text for keyword in ("剑", "刀", "sword", "blade", "匕首", "长矛", "枪")):
         return "sword"
     if any(keyword in text for keyword in ("盾", "shield")):
@@ -164,6 +169,40 @@ def _draw_creature(draw: ImageDraw.ImageDraw, width: int, height: int, palette: 
     elif animation == "death":
         draw.line([cx - body_w * 0.1, cy - body_h * 0.08, cx + body_w * 0.1, cy + body_h * 0.08], fill=outline + (255,), width=line)
         draw.line([cx + body_w * 0.1, cy - body_h * 0.08, cx - body_w * 0.1, cy + body_h * 0.08], fill=outline + (255,), width=line)
+
+
+def _draw_humanoid(draw: ImageDraw.ImageDraw, width: int, height: int, palette: list[str], progress: float, animation: str) -> None:
+    skin = (255, 214, 186)
+    hair = _rgb(palette[5] if len(palette) > 5 else "#172033")
+    outfit = _rgb(palette[0])
+    accent = _rgb(palette[3] if len(palette) > 3 else "#EF5350")
+    outline = _rgb(palette[5] if len(palette) > 5 else "#172033")
+    line = max(1, width // 28)
+    cx = width * 0.5
+    step = math.sin(progress * math.pi * 2) * height * 0.03 if animation == "walk" else 0
+    head_r = width * 0.16
+    head_y = height * 0.28
+    body_top = height * 0.43
+    body_bottom = height * 0.72
+
+    draw.ellipse([cx - head_r * 1.18, head_y - head_r * 1.28, cx + head_r * 1.18, head_y + head_r * 1.38], fill=hair + (255,), outline=outline + (255,), width=line)
+    draw.ellipse([cx - head_r, head_y - head_r, cx + head_r, head_y + head_r], fill=skin + (255,), outline=outline + (255,), width=line)
+    bang = [(cx - head_r * 0.92, head_y - head_r * 0.55), (cx - head_r * 0.25, head_y - head_r * 1.05), (cx + head_r * 0.62, head_y - head_r * 0.55)]
+    draw.polygon(bang, fill=hair + (255,))
+
+    eye_r = max(1, width // 42)
+    for ex in (cx - head_r * 0.32, cx + head_r * 0.32):
+        draw.ellipse([ex - eye_r, head_y - eye_r * 0.3, ex + eye_r, head_y + eye_r * 1.7], fill=outline + (255,))
+    draw.arc([cx - head_r * 0.26, head_y + head_r * 0.12, cx + head_r * 0.26, head_y + head_r * 0.34], 10, 170, fill=accent + (255,), width=max(1, line // 2))
+
+    dress = [(cx, body_top), (width * 0.30, body_bottom), (width * 0.70, body_bottom)]
+    draw.polygon(dress, fill=outfit + (255,), outline=outline + (255,))
+    draw.line([width * 0.34, body_top + height * 0.04, width * 0.18, height * 0.62], fill=skin + (255,), width=line * 2)
+    draw.line([width * 0.66, body_top + height * 0.04, width * 0.82, height * 0.62], fill=skin + (255,), width=line * 2)
+    draw.line([width * 0.42, body_bottom, width * 0.39, height * 0.9 + step], fill=outline + (255,), width=line * 2)
+    draw.line([width * 0.58, body_bottom, width * 0.61, height * 0.9 - step], fill=outline + (255,), width=line * 2)
+    draw.ellipse([width * 0.32, height * 0.88 + step, width * 0.45, height * 0.95 + step], fill=accent + (255,), outline=outline + (255,), width=max(1, line // 2))
+    draw.ellipse([width * 0.55, height * 0.88 - step, width * 0.68, height * 0.95 - step], fill=accent + (255,), outline=outline + (255,), width=max(1, line // 2))
 
 
 def _draw_sword(draw: ImageDraw.ImageDraw, width: int, height: int, palette: list[str], progress: float, animation: str) -> None:

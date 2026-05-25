@@ -34,10 +34,35 @@ while (Test-PortInUse $webPort) {
 Write-Host "Starting SpriteForge API on http://127.0.0.1:$apiPort"
 Write-Host "Starting SpriteForge Web on http://127.0.0.1:$webPort"
 
+$apiEnvCommand = "`$env:PORT='$apiPort';"
+foreach ($name in @(
+  "SPRITEFORGE_AI_PROVIDER",
+  "SPRITEFORGE_PROMPT_PROVIDER",
+  "SPRITEFORGE_AI_FALLBACK",
+  "ARK_API_KEY",
+  "ARK_BASE_URL",
+  "ARK_IMAGE_MODEL",
+  "ARK_ENDPOINT_ID",
+  "ARK_IMAGE_SIZE",
+  "ARK_IMAGE_RESPONSE_FORMAT",
+  "ARK_IMAGE_WATERMARK",
+  "ARK_IMAGE_PROMPT_SUFFIX",
+  "ARK_REMOVE_WHITE_BACKGROUND",
+  "ARK_WHITE_THRESHOLD",
+  "ARK_MIN_VISIBLE_RATIO",
+  "ARK_TIMEOUT_SECONDS"
+)) {
+  $value = [Environment]::GetEnvironmentVariable($name, "Process")
+  if ($null -ne $value -and $value -ne "") {
+    $escaped = $value.Replace("'", "''")
+    $apiEnvCommand += " `$env:$name='$escaped';"
+  }
+}
+
 $apiArgs = @(
   "-NoExit",
   "-Command",
-  "Set-Location '$root'; `$env:PORT='$apiPort'; & '$pythonExe' 'backend\run.py'"
+  "Set-Location '$root'; $apiEnvCommand & '$pythonExe' 'backend\run.py'"
 )
 
 $webArgs = @(
