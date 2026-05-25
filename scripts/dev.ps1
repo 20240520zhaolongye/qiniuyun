@@ -3,9 +3,22 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $apiPort = if ($env:PORT) { [int]$env:PORT } else { 8000 }
 $webPort = if ($env:WEB_PORT) { [int]$env:WEB_PORT } else { 5173 }
+$pythonExe = Join-Path $root "backend\.venv\Scripts\python.exe"
 
 function Test-PortInUse([int]$port) {
   return [bool](Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue)
+}
+
+if (!(Test-Path $pythonExe)) {
+  Write-Host "Creating backend virtual environment..."
+  python -m venv (Join-Path $root "backend\.venv")
+}
+
+$sitePackages = Get-ChildItem (Join-Path $root "backend\.venv\Lib\site-packages") -Directory -ErrorAction SilentlyContinue
+$hasBackendDeps = $sitePackages.Name -contains "uvicorn" -and $sitePackages.Name -contains "fastapi" -and $sitePackages.Name -contains "PIL"
+if (!$hasBackendDeps) {
+  Write-Host "Installing backend dependencies..."
+  & $pythonExe -m pip install -r (Join-Path $root "backend\requirements.txt") pytest
 }
 
 while (Test-PortInUse $apiPort) {
@@ -24,7 +37,7 @@ Write-Host "Starting SpriteForge Web on http://127.0.0.1:$webPort"
 $apiArgs = @(
   "-NoExit",
   "-Command",
-  "Set-Location '$root'; `$env:PORT='$apiPort'; backend\.venv\Scripts\python.exe backend\run.py"
+  "Set-Location '$root'; `$env:PORT='$apiPort'; & '$pythonExe' 'backend\run.py'"
 )
 
 $webArgs = @(
