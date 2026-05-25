@@ -155,19 +155,25 @@ function App() {
               </div>
               <div className="flex min-h-48 items-center justify-center rounded border border-[#e2d8c8] bg-[#eef2f6] p-4">
                 <div
-                  className="sprite-animation"
+                  className="sprite-animation-viewport"
                   style={
                     {
-                      "--sheet-url": `url(${apiOrigin}${asset.files.sheet}?v=${asset.id})`,
-                      "--frame-width": `${plan.metadata.frameWidth}px`,
-                      "--frame-height": `${plan.metadata.frameHeight}px`,
+                      "--preview-width": `${Math.min(plan.metadata.frameWidth, 320)}px`,
+                      "--preview-height": `${Math.min(plan.metadata.frameHeight, 320)}px`,
                       "--frame-count": plan.metadata.frameCount,
-                      "--sheet-width": `${plan.metadata.frameWidth * plan.metadata.frameCount}px`,
                       "--duration": `${Math.max(0.1, plan.metadata.frameCount / Math.max(1, plan.metadata.fps))}s`,
                       imageRendering: plan.metadata.style === "pixel_art" ? "pixelated" : "auto"
                     } as React.CSSProperties
                   }
-                />
+                >
+                  <img
+                    className="sprite-animation-sheet"
+                    src={`${apiOrigin}${asset.files.sheet}?v=${asset.id}`}
+                    alt="动画演示"
+                    draggable={false}
+                    style={{ width: `${Math.min(plan.metadata.frameWidth, 320) * plan.metadata.frameCount}px`, height: `${Math.min(plan.metadata.frameHeight, 320)}px` }}
+                  />
+                </div>
               </div>
             </section>
           ) : null}

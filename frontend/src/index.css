@@ -9,23 +9,27 @@ body {
   color: #172033;
 }
 
-.sprite-animation {
-  width: var(--frame-width);
-  height: var(--frame-height);
-  max-width: min(100%, 320px);
-  max-height: 320px;
-  aspect-ratio: var(--frame-width) / var(--frame-height);
-  background-image: var(--sheet-url);
-  background-repeat: no-repeat;
-  background-size: var(--sheet-width) var(--frame-height);
+.sprite-animation-viewport {
+  width: var(--preview-width);
+  height: var(--preview-height);
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.sprite-animation-sheet {
+  display: block;
+  max-width: none;
+  object-fit: fill;
   animation: sprite-preview var(--duration) steps(var(--frame-count)) infinite;
 }
 
 @keyframes sprite-preview {
   from {
-    background-position-x: 0;
+    transform: translateX(0);
   }
   to {
-    background-position-x: calc(-1 * var(--sheet-width));
+    transform: translateX(-100%);
   }
 }
