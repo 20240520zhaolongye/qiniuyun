@@ -12,7 +12,7 @@ function App() {
   }, [generatePlan]);
 
   useEffect(() => {
-    if (!canvasRef.current || !plan) return;
+    if (!canvasRef.current) return;
     canvasRef.current.innerHTML = "";
 
     const stageSize = 480;
@@ -23,7 +23,7 @@ function App() {
     let animation: Konva.Animation | null = null;
     let frameNode: Konva.Image | null = null;
 
-    if (asset) {
+    if (asset && plan) {
       const image = new window.Image();
       image.crossOrigin = "anonymous";
       image.onload = () => {
@@ -63,7 +63,7 @@ function App() {
         new Konva.Text({
           x: 24,
           y: 24,
-          text: "点击“生成素材”后，这里会显示生成的 PNG 素材；多帧素材会按 FPS 播放动画预览。",
+          text: plan ? "Prompt 已按当前参数生成。点击“生成素材”后，这里会显示素材预览。" : "修改参数后请点击“生成 Prompt”刷新提示词。",
           fontSize: 18,
           fontFamily: "Arial",
           fill: "#172033",

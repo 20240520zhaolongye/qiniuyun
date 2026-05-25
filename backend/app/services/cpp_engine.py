@@ -17,7 +17,7 @@ def create_plan(payload: dict[str, Any]) -> dict[str, Any]:
 
     process = subprocess.run(
         [str(CLI_PATH)],
-        input=json.dumps(payload, ensure_ascii=False),
+        input=json.dumps(payload, ensure_ascii=True),
         text=True,
         encoding="utf-8",
         capture_output=True,
