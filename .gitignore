@@ -2,3 +2,10 @@ build/
 *.log
 .idea/
 node_modules/
+frontend/node_modules/
+frontend/dist/
+backend/.venv/
+backend/**/__pycache__/
+backend/data/
+backend/exports/
+.npm-cache/
