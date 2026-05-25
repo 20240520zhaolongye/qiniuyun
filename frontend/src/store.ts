@@ -49,6 +49,9 @@ async function postJson<T>(url: string, payload: unknown): Promise<T> {
   return (await response.json()) as T;
 }
 
+let activePlanRequest = 0;
+let activeAssetRequest = 0;
+
 export const useAssetStore = create<StoreState>((set, get) => ({
   request: defaultRequest,
   styleProfile: defaultStyleProfile,
@@ -71,27 +74,33 @@ export const useAssetStore = create<StoreState>((set, get) => ({
       error: null
     })),
   generatePlan: async () => {
+    const requestId = ++activePlanRequest;
     set({ loading: true, error: null, asset: null });
     try {
       const { request, styleProfile } = get();
       const plan = await postJson<AssetPlan>(`${apiBase}/assets/plan`, { request, styleProfile });
+      if (requestId !== activePlanRequest) return;
       set({ plan });
     } catch (error) {
+      if (requestId !== activePlanRequest) return;
       set({ error: error instanceof Error ? error.message : "无法生成 Prompt，请确认后端服务已启动。" });
     } finally {
-      set({ loading: false });
+      if (requestId === activePlanRequest) set({ loading: false });
     }
   },
   generateAsset: async () => {
+    const requestId = ++activeAssetRequest;
     set({ loading: true, error: null });
     try {
       const { request, styleProfile } = get();
       const asset = await postJson<GeneratedAsset>(`${apiBase}/assets/generate`, { request, styleProfile });
+      if (requestId !== activeAssetRequest) return;
       set({ asset, plan: asset.plan });
     } catch (error) {
+      if (requestId !== activeAssetRequest) return;
       set({ error: error instanceof Error ? error.message : "素材生成失败，请检查后端服务是否启动。" });
     } finally {
-      set({ loading: false });
+      if (requestId === activeAssetRequest) set({ loading: false });
     }
   }
 }));
