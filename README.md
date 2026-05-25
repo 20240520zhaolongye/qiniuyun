@@ -1,5 +1,6 @@
 # SpriteForge
 解说demo：https://www.bilibili.com/video/BV192Go6nEZW/
+
 SpriteForge 是一个面向 2D 游戏开发的素材生成工具。当前版本已经迁移为 **C++ 核心 + Python FastAPI + React/TypeScript/Vite/Tailwind/Zustand/Konva** 的分层架构。
 
 用户可以输入文本描述或简单参数，生成结构化 Prompt、透明 PNG、Sprite Sheet 和 JSON 元数据。图像生成支持火山方舟 API、ComfyUI API 和可选 Mock Generator；当前默认使用火山方舟 API，生成失败时不会自动回退到 Mock，便于及时发现真实接口配置或额度问题。
