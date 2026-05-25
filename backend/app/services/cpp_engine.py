@@ -98,4 +98,7 @@ def create_plan(payload: dict[str, Any]) -> dict[str, Any]:
     except json.JSONDecodeError as exc:
         raise CppEngineError(f"Invalid C++ JSON output: {exc}") from exc
     plan["prompt"] = _build_prompt(payload, plan)
+    plan.setdefault("draw", {})
+    plan["draw"]["description"] = payload["request"].get("description", "")
+    plan["draw"]["assetName"] = payload["request"].get("assetName", "")
     return plan

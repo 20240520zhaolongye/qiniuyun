@@ -31,6 +31,7 @@ def generate_frames(plan: dict[str, Any]) -> list[Image.Image]:
     style = metadata.get("style", draw_info.get("style", "pixel_art"))
     view = draw_info.get("view", "side")
     animation = draw_info.get("animation", "idle")
+    subject = _infer_subject(draw_info.get("description", ""), draw_info.get("assetName", ""), draw_info.get("assetType", "monster"))
     rng = random.Random(_seed(plan))
 
     frames: list[Image.Image] = []
@@ -39,7 +40,19 @@ def generate_frames(plan: dict[str, Any]) -> list[Image.Image]:
         draw = ImageDraw.Draw(image)
         progress = _animation_progress(animation, frame_index, frame_count)
         asset_type = draw_info.get("assetType", "monster")
-        if asset_type == "tile":
+        if subject == "sword":
+            _draw_sword(draw, width, height, palette, progress, animation)
+        elif subject == "shield":
+            _draw_shield(draw, width, height, palette)
+        elif subject == "potion":
+            _draw_potion(draw, width, height, palette)
+        elif subject == "key":
+            _draw_key(draw, width, height, palette)
+        elif subject == "coin":
+            _draw_coin(draw, width, height, palette)
+        elif subject == "chest":
+            _draw_chest(draw, width, height, palette)
+        elif asset_type == "tile":
             _draw_tile(draw, width, height, palette, rng)
         elif asset_type == "icon":
             _draw_icon(draw, width, height, palette)
@@ -53,6 +66,23 @@ def generate_frames(plan: dict[str, Any]) -> list[Image.Image]:
         _apply_style_finish(draw, width, height, palette, style)
         frames.append(image)
     return frames
+
+
+def _infer_subject(description: str, asset_name: str, asset_type: str) -> str:
+    text = f"{description} {asset_name}".lower()
+    if any(keyword in text for keyword in ("剑", "刀", "sword", "blade", "匕首", "长矛", "枪")):
+        return "sword"
+    if any(keyword in text for keyword in ("盾", "shield")):
+        return "shield"
+    if any(keyword in text for keyword in ("药水", "药瓶", "potion", "瓶")):
+        return "potion"
+    if any(keyword in text for keyword in ("钥匙", "key")):
+        return "key"
+    if any(keyword in text for keyword in ("金币", "硬币", "coin", "gold")):
+        return "coin"
+    if any(keyword in text for keyword in ("宝箱", "箱子", "chest")):
+        return "chest"
+    return asset_type
 
 
 def save_outputs(plan: dict[str, Any], output_dir: Path) -> dict[str, str]:
@@ -134,6 +164,83 @@ def _draw_creature(draw: ImageDraw.ImageDraw, width: int, height: int, palette: 
     elif animation == "death":
         draw.line([cx - body_w * 0.1, cy - body_h * 0.08, cx + body_w * 0.1, cy + body_h * 0.08], fill=outline + (255,), width=line)
         draw.line([cx + body_w * 0.1, cy - body_h * 0.08, cx - body_w * 0.1, cy + body_h * 0.08], fill=outline + (255,), width=line)
+
+
+def _draw_sword(draw: ImageDraw.ImageDraw, width: int, height: int, palette: list[str], progress: float, animation: str) -> None:
+    metal = _rgb(palette[4] if len(palette) > 4 else "#FFFFFF")
+    guard = _rgb(palette[2] if len(palette) > 2 else "#FDD835")
+    grip = _rgb(palette[1] if len(palette) > 1 else "#43A047")
+    outline = _rgb(palette[5] if len(palette) > 5 else "#172033")
+    accent = _rgb(palette[3] if len(palette) > 3 else "#EF5350")
+    line = max(2, width // 22)
+    dx = math.sin(progress * math.pi) * width * 0.08 if animation == "attack" else 0
+    cx = width * 0.5 + dx
+    blade = [
+        (cx, height * 0.12),
+        (width * 0.62 + dx, height * 0.62),
+        (width * 0.52 + dx, height * 0.68),
+        (width * 0.38 + dx, height * 0.62),
+    ]
+    draw.polygon(blade, fill=metal + (255,), outline=outline + (255,))
+    draw.line([cx, height * 0.16, width * 0.5 + dx, height * 0.62], fill=outline + (120,), width=max(1, line // 2))
+    draw.rounded_rectangle([width * 0.28 + dx, height * 0.60, width * 0.72 + dx, height * 0.70], radius=line, fill=guard + (255,), outline=outline + (255,), width=line)
+    draw.rounded_rectangle([width * 0.43 + dx, height * 0.68, width * 0.57 + dx, height * 0.88], radius=line, fill=grip + (255,), outline=outline + (255,), width=line)
+    draw.ellipse([width * 0.42 + dx, height * 0.84, width * 0.58 + dx, height * 0.98], fill=accent + (255,), outline=outline + (255,), width=line)
+
+
+def _draw_shield(draw: ImageDraw.ImageDraw, width: int, height: int, palette: list[str]) -> None:
+    primary = _rgb(palette[0])
+    accent = _rgb(palette[2] if len(palette) > 2 else "#FDD835")
+    outline = _rgb(palette[5] if len(palette) > 5 else "#172033")
+    line = max(2, width // 18)
+    points = [(width * 0.5, height * 0.12), (width * 0.78, height * 0.25), (width * 0.72, height * 0.68), (width * 0.5, height * 0.9), (width * 0.28, height * 0.68), (width * 0.22, height * 0.25)]
+    draw.polygon(points, fill=primary + (255,), outline=outline + (255,))
+    draw.line([width * 0.5, height * 0.18, width * 0.5, height * 0.82], fill=accent + (255,), width=line)
+    draw.arc([width * 0.32, height * 0.22, width * 0.68, height * 0.62], 205, 335, fill=accent + (220,), width=line)
+
+
+def _draw_potion(draw: ImageDraw.ImageDraw, width: int, height: int, palette: list[str]) -> None:
+    liquid = _rgb(palette[3] if len(palette) > 3 else "#EF5350")
+    glass = _rgb(palette[4] if len(palette) > 4 else "#FFFFFF")
+    outline = _rgb(palette[5] if len(palette) > 5 else "#172033")
+    cork = _rgb(palette[1] if len(palette) > 1 else "#43A047")
+    line = max(2, width // 20)
+    draw.rounded_rectangle([width * 0.42, height * 0.1, width * 0.58, height * 0.32], radius=line, fill=cork + (255,), outline=outline + (255,), width=line)
+    draw.ellipse([width * 0.24, height * 0.28, width * 0.76, height * 0.88], fill=glass + (95,), outline=outline + (255,), width=line)
+    draw.pieslice([width * 0.28, height * 0.38, width * 0.72, height * 0.86], 0, 180, fill=liquid + (210,))
+    draw.ellipse([width * 0.42, height * 0.42, width * 0.54, height * 0.54], fill=glass + (180,))
+
+
+def _draw_key(draw: ImageDraw.ImageDraw, width: int, height: int, palette: list[str]) -> None:
+    gold = _rgb(palette[2] if len(palette) > 2 else "#FDD835")
+    outline = _rgb(palette[5] if len(palette) > 5 else "#172033")
+    line = max(2, width // 18)
+    draw.ellipse([width * 0.16, height * 0.34, width * 0.44, height * 0.62], fill=gold + (255,), outline=outline + (255,), width=line)
+    draw.ellipse([width * 0.25, height * 0.43, width * 0.35, height * 0.53], fill=(0, 0, 0, 0), outline=outline + (255,), width=max(1, line // 2))
+    draw.rounded_rectangle([width * 0.40, height * 0.45, width * 0.84, height * 0.53], radius=line, fill=gold + (255,), outline=outline + (255,), width=line)
+    draw.rectangle([width * 0.72, height * 0.52, width * 0.80, height * 0.68], fill=gold + (255,), outline=outline + (255,))
+    draw.rectangle([width * 0.58, height * 0.52, width * 0.66, height * 0.62], fill=gold + (255,), outline=outline + (255,))
+
+
+def _draw_coin(draw: ImageDraw.ImageDraw, width: int, height: int, palette: list[str]) -> None:
+    gold = _rgb(palette[2] if len(palette) > 2 else "#FDD835")
+    accent = _rgb(palette[3] if len(palette) > 3 else "#EF5350")
+    outline = _rgb(palette[5] if len(palette) > 5 else "#172033")
+    line = max(2, width // 18)
+    draw.ellipse([width * 0.18, height * 0.18, width * 0.82, height * 0.82], fill=gold + (255,), outline=outline + (255,), width=line)
+    draw.ellipse([width * 0.3, height * 0.3, width * 0.7, height * 0.7], outline=accent + (230,), width=line)
+    draw.line([width * 0.5, height * 0.34, width * 0.5, height * 0.66], fill=outline + (180,), width=max(1, line // 2))
+
+
+def _draw_chest(draw: ImageDraw.ImageDraw, width: int, height: int, palette: list[str]) -> None:
+    wood = _rgb(palette[1] if len(palette) > 1 else "#43A047")
+    gold = _rgb(palette[2] if len(palette) > 2 else "#FDD835")
+    outline = _rgb(palette[5] if len(palette) > 5 else "#172033")
+    line = max(2, width // 18)
+    draw.rounded_rectangle([width * 0.18, height * 0.34, width * 0.82, height * 0.78], radius=line, fill=wood + (255,), outline=outline + (255,), width=line)
+    draw.arc([width * 0.18, height * 0.14, width * 0.82, height * 0.58], 180, 360, fill=outline + (255,), width=line)
+    draw.rectangle([width * 0.47, height * 0.34, width * 0.53, height * 0.78], fill=gold + (255,))
+    draw.rectangle([width * 0.42, height * 0.48, width * 0.58, height * 0.62], fill=gold + (255,), outline=outline + (255,))
 
 
 def _apply_view_marker(draw: ImageDraw.ImageDraw, width: int, height: int, palette: list[str], view: str) -> None:

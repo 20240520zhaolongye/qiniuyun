@@ -2,6 +2,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 BACKEND = ROOT / "backend"
@@ -75,3 +76,37 @@ def test_generate_response_uses_download_urls():
     )
     assert response.files["png"].startswith("/api/assets/")
     assert ":" not in response.files["png"]
+
+
+def test_mock_generator_prefers_text_subject_for_sword():
+    from app.services.mock_generator import generate_frames
+
+    plan = {
+        "seed": 1,
+        "prompt": "素材描述：剑",
+        "metadata": {
+            "assetName": "sword_check",
+            "assetType": "monster",
+            "style": "pixel_art",
+            "frameWidth": 128,
+            "frameHeight": 128,
+            "frameCount": 1,
+            "animationName": "idle",
+            "fps": 8,
+        },
+        "draw": {
+            "assetType": "monster",
+            "description": "剑",
+            "assetName": "sword_check",
+            "palette": ["#2E5EAA", "#43A047", "#FDD835", "#EF5350", "#FFFFFF", "#172033"],
+            "view": "side",
+            "animation": "idle",
+        },
+    }
+
+    frame = generate_frames(plan)[0]
+    center_pixel = frame.getpixel((64, 64))
+    lower_pixel = frame.getpixel((64, 110))
+    assert center_pixel[3] > 0
+    assert lower_pixel[3] > 0
+    assert isinstance(frame, Image.Image)
