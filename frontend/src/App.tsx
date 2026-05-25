@@ -145,6 +145,32 @@ function App() {
             {previewError ? <p className="mt-3 text-sm text-red-700">{previewError}</p> : null}
           </div>
           {plan?.metadata.generationWarning ? <p className="mt-3 text-sm text-amber-700">生成已回退到 Mock：{plan.metadata.generationWarning}</p> : null}
+          {asset && plan ? (
+            <section className="mt-4 rounded border border-[#d8cfbf] bg-white p-3">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <strong>动画演示</strong>
+                <span className="text-xs text-[#6d7180]">
+                  {plan.metadata.animationName} · {plan.metadata.frameCount} 帧 · {plan.metadata.fps} FPS
+                </span>
+              </div>
+              <div className="flex min-h-48 items-center justify-center rounded border border-[#e2d8c8] bg-[#eef2f6] p-4">
+                <div
+                  className="sprite-animation"
+                  style={
+                    {
+                      "--sheet-url": `url(${apiOrigin}${asset.files.sheet}?v=${asset.id})`,
+                      "--frame-width": `${plan.metadata.frameWidth}px`,
+                      "--frame-height": `${plan.metadata.frameHeight}px`,
+                      "--frame-count": plan.metadata.frameCount,
+                      "--sheet-width": `${plan.metadata.frameWidth * plan.metadata.frameCount}px`,
+                      "--duration": `${Math.max(0.1, plan.metadata.frameCount / Math.max(1, plan.metadata.fps))}s`,
+                      imageRendering: plan.metadata.style === "pixel_art" ? "pixelated" : "auto"
+                    } as React.CSSProperties
+                  }
+                />
+              </div>
+            </section>
+          ) : null}
           <label className="mt-4 block text-sm">
             Prompt
             <textarea
