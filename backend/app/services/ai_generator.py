@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import base64
 import json
 import os
 import time
@@ -20,8 +21,10 @@ class AiGenerationError(RuntimeError):
 
 def save_outputs(plan: dict[str, Any], output_dir: Path) -> dict[str, str]:
     provider = os.environ.get("SPRITEFORGE_AI_PROVIDER", "mock").strip().lower()
-    if provider == "comfyui":
+    if provider in {"comfyui", "ark"}:
         try:
+            if provider == "ark":
+                return _save_ark_outputs(plan, output_dir)
             return _save_comfyui_outputs(plan, output_dir)
         except Exception as exc:
             if os.environ.get("SPRITEFORGE_AI_FALLBACK", "mock").strip().lower() == "mock":
@@ -32,6 +35,73 @@ def save_outputs(plan: dict[str, Any], output_dir: Path) -> dict[str, str]:
 
     plan.setdefault("metadata", {})["generationProvider"] = "mock"
     return save_mock_outputs(plan, output_dir)
+
+
+def _save_ark_outputs(plan: dict[str, Any], output_dir: Path) -> dict[str, str]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    metadata = plan["metadata"]
+    image_bytes = _call_ark_image_api(plan)
+    source_path = output_dir / f"{metadata['assetName']}_ark.png"
+    source_path.write_bytes(image_bytes)
+
+    image = Image.open(source_path).convert("RGBA")
+    frame_width = int(metadata["frameWidth"])
+    frame_height = int(metadata["frameHeight"])
+    frame_count = int(metadata["frameCount"])
+    frames = _prepare_frames(image, frame_width, frame_height, frame_count)
+
+    png_path = output_dir / f"{metadata['assetName']}.png"
+    sheet_path = output_dir / f"{metadata['assetName']}_sheet.png"
+    frames[0].save(png_path)
+    sheet = Image.new("RGBA", (frame_width * frame_count, frame_height), (0, 0, 0, 0))
+    for index, frame in enumerate(frames):
+        sheet.alpha_composite(frame, (index * frame_width, 0))
+    sheet.save(sheet_path)
+
+    metadata["generationProvider"] = "ark"
+    return {"png": str(png_path), "sheet": str(sheet_path)}
+
+
+def _call_ark_image_api(plan: dict[str, Any]) -> bytes:
+    api_key = os.environ.get("ARK_API_KEY") or os.environ.get("VOLCENGINE_API_KEY")
+    if not api_key:
+        raise AiGenerationError("未配置 ARK_API_KEY，无法调用火山方舟。")
+
+    base_url = os.environ.get("ARK_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3").rstrip("/")
+    model = os.environ.get("ARK_IMAGE_MODEL") or os.environ.get("ARK_ENDPOINT_ID") or "doubao-seedream-3-0-t2i-250415"
+    timeout = float(os.environ.get("ARK_TIMEOUT_SECONDS", "120"))
+    image_path = os.environ.get("ARK_IMAGE_PATH", "/images/generations")
+    metadata = plan["metadata"]
+    size = f"{int(metadata['frameWidth'])}x{int(metadata['frameHeight'])}"
+    body = {
+        "model": model,
+        "prompt": plan["prompt"],
+        "size": size,
+        "response_format": "b64_json",
+    }
+    request = urllib.request.Request(
+        f"{base_url}{image_path}",
+        data=json.dumps(body, ensure_ascii=False).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json; charset=utf-8",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+
+    try:
+        first = payload["data"][0]
+    except (KeyError, IndexError, TypeError) as exc:
+        raise AiGenerationError(f"火山方舟返回格式异常: {payload}") from exc
+
+    if first.get("b64_json"):
+        return base64.b64decode(first["b64_json"])
+    if first.get("url"):
+        with urllib.request.urlopen(first["url"], timeout=timeout) as image_response:
+            return image_response.read()
+    raise AiGenerationError(f"火山方舟未返回图片数据: {payload}")
 
 
 def _save_comfyui_outputs(plan: dict[str, Any], output_dir: Path) -> dict[str, str]:
