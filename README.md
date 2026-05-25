@@ -141,6 +141,13 @@ $env:COMFYUI_NEGATIVE_NODE_ID="7"
 npm run dev
 ```
 
+也可以用项目内置的 Ark 启动脚本，减少漏配：
+
+```powershell
+$env:ARK_API_KEY="你的火山方舟 API Key"
+npm run dev:ark
+```
+
 行为说明：
 
 - `SPRITEFORGE_AI_PROVIDER=mock` 或未配置：使用内置 Pillow Mock Generator。

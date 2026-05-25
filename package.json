@@ -9,6 +9,7 @@
     "start:api": "backend\\.venv\\Scripts\\python.exe backend/run.py",
     "start:web": "cmd /c \"cd frontend && npm run dev\"",
     "dev": "powershell -ExecutionPolicy Bypass -File scripts/dev.ps1",
+    "dev:ark": "powershell -ExecutionPolicy Bypass -File scripts/dev-ark.ps1",
     "build": "powershell -ExecutionPolicy Bypass -File scripts/build-cpp.ps1",
     "build:frontend": "cmd /c \"cd frontend && npm run build\"",
     "test": "node --test tests/*.test.js",
