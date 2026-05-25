@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Konva from "konva";
 import { apiOrigin, useAssetStore } from "./store";
 
@@ -6,13 +6,11 @@ function App() {
   const { request, styleProfile, plan, asset, promptText, loading, error, setRequest, setStyleProfile, setPromptText, generateAsset, generatePlan } =
     useAssetStore();
   const canvasRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    void generatePlan();
-  }, [generatePlan]);
+  const [previewError, setPreviewError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
+    setPreviewError(null);
     canvasRef.current.innerHTML = "";
 
     const stageSize = 480;
@@ -56,6 +54,9 @@ function App() {
           }, layer);
           animation.start();
         }
+      };
+      image.onerror = () => {
+        setPreviewError("图片加载失败，请检查后端服务和素材下载接口。");
       };
       image.src = `${apiOrigin}${asset.files.sheet}?v=${asset.id}`;
     } else {
@@ -137,6 +138,7 @@ function App() {
           </div>
           <div className="min-h-[520px] rounded border border-[#d8cfbf] bg-[#eef2f6] p-4">
             <div ref={canvasRef} />
+            {previewError ? <p className="mt-3 text-sm text-red-700">{previewError}</p> : null}
           </div>
           <label className="mt-4 block text-sm">
             Prompt

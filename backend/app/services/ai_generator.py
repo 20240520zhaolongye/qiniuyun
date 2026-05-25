@@ -44,7 +44,7 @@ def _save_ark_outputs(plan: dict[str, Any], output_dir: Path) -> dict[str, str]:
     source_path = output_dir / f"{metadata['assetName']}_ark.png"
     source_path.write_bytes(image_bytes)
 
-    image = Image.open(source_path).convert("RGBA")
+    image = _make_near_white_transparent(Image.open(source_path).convert("RGBA"))
     frame_width = int(metadata["frameWidth"])
     frame_height = int(metadata["frameHeight"])
     frame_count = int(metadata["frameCount"])
@@ -79,7 +79,7 @@ def _call_ark_image_api(plan: dict[str, Any]) -> bytes:
         client = OpenAI(base_url=base_url, api_key=api_key)
         response = client.images.generate(
             model=model,
-            prompt=plan["prompt"],
+            prompt=_ark_image_prompt(plan["prompt"]),
             size=size,
             response_format=response_format,
             extra_body={"watermark": watermark},
@@ -92,7 +92,17 @@ def _call_ark_image_api(plan: dict[str, Any]) -> bytes:
                 return image_response.read()
         raise AiGenerationError("火山方舟 SDK 未返回图片数据。")
     except ImportError:
-        return _call_ark_image_api_raw(base_url, api_key, model, plan["prompt"], size, response_format, watermark)
+        return _call_ark_image_api_raw(base_url, api_key, model, _ark_image_prompt(plan["prompt"]), size, response_format, watermark)
+
+
+def _ark_image_prompt(prompt: str) -> str:
+    suffix = os.environ.get(
+        "ARK_IMAGE_PROMPT_SUFFIX",
+        "single centered 2D game sprite asset, transparent or plain background, no text, no watermark, full body visible, clean silhouette",
+    )
+    if not suffix.strip():
+        return prompt
+    return f"{prompt}\n{suffix}"
 
 
 def _ark_size_from_plan(plan: dict[str, Any]) -> str:
@@ -100,6 +110,51 @@ def _ark_size_from_plan(plan: dict[str, Any]) -> str:
         return os.environ.get("ARK_NATIVE_SIZE", "2K")
     metadata = plan["metadata"]
     return f"{int(metadata['frameWidth'])}x{int(metadata['frameHeight'])}"
+
+
+def _make_near_white_transparent(image: Image.Image) -> Image.Image:
+    if os.environ.get("ARK_REMOVE_WHITE_BACKGROUND", "true").strip().lower() not in {"1", "true", "yes", "on"}:
+        return image
+    pixels = image.load()
+    if pixels is None:
+        return image
+    threshold = int(os.environ.get("ARK_WHITE_THRESHOLD", "246"))
+    original = image.copy()
+    visited: set[tuple[int, int]] = set()
+    stack: list[tuple[int, int]] = []
+
+    def is_white(pixel: tuple[int, int, int, int]) -> bool:
+        red, green, blue, alpha = pixel
+        return alpha > 0 and red >= threshold and green >= threshold and blue >= threshold
+
+    for x in range(image.width):
+        for y in (0, image.height - 1):
+            if is_white(pixels[x, y]):
+                stack.append((x, y))
+    for y in range(image.height):
+        for x in (0, image.width - 1):
+            if is_white(pixels[x, y]):
+                stack.append((x, y))
+
+    while stack:
+        x, y = stack.pop()
+        if (x, y) in visited or x < 0 or y < 0 or x >= image.width or y >= image.height:
+            continue
+        if not is_white(pixels[x, y]):
+            continue
+        visited.add((x, y))
+        red, green, blue, _ = pixels[x, y]
+        pixels[x, y] = (red, green, blue, 0)
+        stack.extend(((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)))
+
+    alpha_bbox = image.getchannel("A").getbbox()
+    if alpha_bbox is None:
+        return original
+    visible_pixels = sum(1 for alpha in image.getchannel("A").getdata() if alpha > 0)
+    min_visible_ratio = float(os.environ.get("ARK_MIN_VISIBLE_RATIO", "0.01"))
+    if visible_pixels / (image.width * image.height) < min_visible_ratio:
+        return original
+    return image
 
 
 def _call_ark_image_api_raw(base_url: str, api_key: str, model: str, prompt: str, size: str, response_format: str, watermark: bool) -> bytes:
@@ -297,8 +352,16 @@ def _download_image(base_url: str, image: dict[str, Any]) -> bytes:
 
 
 def _prepare_frames(image: Image.Image, frame_width: int, frame_height: int, frame_count: int) -> list[Image.Image]:
-    if image.width >= frame_width * frame_count and image.height >= frame_height:
-        return [image.crop((index * frame_width, 0, (index + 1) * frame_width, frame_height)) for index in range(frame_count)]
+    sheet_width = frame_width * frame_count
+    expected_ratio = sheet_width / frame_height
+    actual_ratio = image.width / image.height if image.height else expected_ratio
+    looks_like_sheet = frame_count > 1 and abs(actual_ratio - expected_ratio) <= 0.2
+    if image.width == sheet_width and image.height == frame_height:
+        sheet = image
+    elif looks_like_sheet and image.width >= sheet_width and image.height >= frame_height:
+        sheet = image.resize((sheet_width, frame_height), Image.Resampling.LANCZOS)
+    else:
+        frame = image.resize((frame_width, frame_height), Image.Resampling.LANCZOS)
+        return [frame.copy() for _ in range(frame_count)]
 
-    frame = image.resize((frame_width, frame_height), Image.Resampling.LANCZOS)
-    return [frame.copy() for _ in range(frame_count)]
+    return [sheet.crop((index * frame_width, 0, (index + 1) * frame_width, frame_height)) for index in range(frame_count)]

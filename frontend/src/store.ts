@@ -100,7 +100,12 @@ export const useAssetStore = create<StoreState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const { request, styleProfile } = get();
-      const promptOverride = get().promptText.trim() || undefined;
+      let promptOverride = get().promptText.trim() || undefined;
+      if (!promptOverride) {
+        const plan = await postJson<AssetPlan>(`${apiBase}/assets/plan`, { request, styleProfile });
+        promptOverride = plan.prompt;
+        if (requestId === activeAssetRequest) set({ plan, promptText: plan.prompt });
+      }
       const payload: GeneratePayload = { request, styleProfile, promptOverride };
       const asset = await postJson<GeneratedAsset>(`${apiBase}/assets/generate`, payload);
       if (requestId !== activeAssetRequest) return;
