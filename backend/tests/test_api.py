@@ -30,7 +30,7 @@ def test_cpp_cli_payload_shape():
             "description": "蓝色史莱姆",
             "assetType": "monster",
             "style": "pixel_art",
-            "size": "32x32",
+            "size": "128x128",
             "view": "side",
             "animation": "idle",
             "frameCount": 4,
@@ -38,12 +38,12 @@ def test_cpp_cli_payload_shape():
             "exportTarget": "unity",
         },
         "styleProfile": {
-            "styleName": "bright_pixel_fantasy",
+            "styleName": "明亮像素幻想",
             "colorPalette": ["#2E5EAA", "#43A047", "#FDD835", "#EF5350", "#FFFFFF", "#172033"],
-            "lineStyle": "clean dark outline",
-            "lighting": "simple top-left cel shading",
-            "worldKeywords": "bright fantasy",
-            "negativePrompt": "watermark",
+            "lineStyle": "干净的深色描边",
+            "lighting": "左上方简化明暗光照",
+            "worldKeywords": "明亮幻想",
+            "negativePrompt": "水印",
         },
     }
 
@@ -58,7 +58,7 @@ def test_cpp_cli_payload_shape():
     assert proc.returncode == 0, proc.stderr
     parsed = json.loads(proc.stdout)
     assert parsed["metadata"]["assetName"] == "blue_slime_idle"
-    assert "32x32" in parsed["prompt"]
+    assert "128x128" in parsed["prompt"]
 
 
 def test_generate_response_uses_download_urls():

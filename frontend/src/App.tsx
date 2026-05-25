@@ -20,30 +20,50 @@ function App() {
     const layer = new Konva.Layer();
     layer.add(new Konva.Rect({ x: 0, y: 0, width: stageSize, height: stageSize, fill: "#eef2f6" }));
 
+    let animation: Konva.Animation | null = null;
+    let frameNode: Konva.Image | null = null;
+
     if (asset) {
       const image = new window.Image();
       image.crossOrigin = "anonymous";
       image.onload = () => {
+        const frameWidth = plan.metadata.frameWidth;
+        const frameHeight = plan.metadata.frameHeight;
+        const frameCount = Math.max(1, plan.metadata.frameCount);
         const imageSize = Math.min(stageSize - 48, stageSize - 48);
-        layer.add(
-          new Konva.Image({
-            image,
-            x: (stageSize - imageSize) / 2,
-            y: (stageSize - imageSize) / 2,
-            width: imageSize,
-            height: imageSize,
-            imageSmoothingEnabled: plan.metadata.style !== "pixel_art"
-          })
-        );
+        const scale = Math.min(imageSize / frameWidth, imageSize / frameHeight);
+        const previewWidth = frameWidth * scale;
+        const previewHeight = frameHeight * scale;
+
+        frameNode = new Konva.Image({
+          image,
+          x: (stageSize - previewWidth) / 2,
+          y: (stageSize - previewHeight) / 2,
+          width: previewWidth,
+          height: previewHeight,
+          crop: { x: 0, y: 0, width: frameWidth, height: frameHeight },
+          imageSmoothingEnabled: plan.metadata.style !== "pixel_art"
+        });
+        layer.add(frameNode);
         layer.draw();
+
+        if (frameCount > 1) {
+          animation = new Konva.Animation((frame) => {
+            if (!frameNode || !frame) return;
+            const duration = Math.max(1, 1000 / Math.max(1, plan.metadata.fps));
+            const frameIndex = Math.floor(frame.time / duration) % frameCount;
+            frameNode.crop({ x: frameIndex * frameWidth, y: 0, width: frameWidth, height: frameHeight });
+          }, layer);
+          animation.start();
+        }
       };
-      image.src = `${apiOrigin}${asset.files.png}?v=${asset.id}`;
+      image.src = `${apiOrigin}${asset.files.sheet}?v=${asset.id}`;
     } else {
       layer.add(
         new Konva.Text({
           x: 24,
           y: 24,
-          text: "点击“生成素材”后，这里会显示生成的 PNG 素材。",
+          text: "点击“生成素材”后，这里会显示生成的 PNG 素材；多帧素材会按 FPS 播放动画预览。",
           fontSize: 18,
           fontFamily: "Arial",
           fill: "#172033",
@@ -53,7 +73,10 @@ function App() {
     }
 
     stage.add(layer);
-    return () => stage.destroy();
+    return () => {
+      animation?.stop();
+      stage.destroy();
+    };
   }, [plan, asset]);
 
   const paletteText = useMemo(() => styleProfile.colorPalette.join(","), [styleProfile.colorPalette]);
@@ -85,8 +108,8 @@ function App() {
 
           <div className="grid grid-cols-2 gap-3">
             <Select label="素材类型" value={request.assetType} onChange={(assetType) => setRequest({ assetType })} options={assetTypes} />
-            <Select label="风格" value={request.style} onChange={(style) => setRequest({ style })} options={styles} />
-            <Select label="尺寸" value={request.size} onChange={(size) => setRequest({ size })} options={sizes} />
+            <Select label="图片风格" value={request.style} onChange={(style) => setRequest({ style })} options={styles} />
+            <Select label="素材大小" value={request.size} onChange={(size) => setRequest({ size })} options={sizes} />
             <Select label="视角" value={request.view} onChange={(view) => setRequest({ view })} options={views} />
             <Select label="动画" value={request.animation} onChange={(animation) => setRequest({ animation })} options={animations} />
             <Select label="导出目标" value={request.exportTarget} onChange={(exportTarget) => setRequest({ exportTarget })} options={targets} />
@@ -108,7 +131,9 @@ function App() {
         <section className="rounded-lg border border-[#d8cfbf] bg-[#fffaf2] p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <strong>预览</strong>
-            <span className="text-sm text-[#6d7180]">{plan ? `${plan.metadata.frameWidth}x${plan.metadata.frameHeight}` : "等待生成"}</span>
+            <span className="text-sm text-[#6d7180]">
+              {plan ? `${plan.metadata.frameWidth}x${plan.metadata.frameHeight} · ${plan.metadata.frameCount} 帧 · ${plan.metadata.fps} FPS` : "等待生成"}
+            </span>
           </div>
           <div className="min-h-[520px] rounded border border-[#d8cfbf] bg-[#eef2f6] p-4">
             <div ref={canvasRef} />
@@ -131,7 +156,10 @@ function App() {
 
         <section className="rounded-lg border border-[#d8cfbf] bg-[#fffaf2] p-4 shadow-sm">
           <h2 className="mb-3 font-semibold">风格档案</h2>
-          <input className="mb-3 w-full rounded border px-3 py-2" value={styleProfile.styleName} onChange={(event) => setStyleProfile({ styleName: event.target.value })} />
+          <label className="mb-3 block text-sm">
+            风格名称
+            <input className="mt-1 w-full rounded border px-3 py-2" value={styleProfile.styleName} onChange={(event) => setStyleProfile({ styleName: event.target.value })} />
+          </label>
           <label className="mb-3 block text-sm">
             主色板
             <input
@@ -157,7 +185,10 @@ function App() {
             世界观关键词
             <input className="mt-1 w-full rounded border px-3 py-2" value={styleProfile.worldKeywords} onChange={(event) => setStyleProfile({ worldKeywords: event.target.value })} />
           </label>
-          <textarea className="mb-3 w-full rounded border px-3 py-2" rows={4} value={styleProfile.negativePrompt} onChange={(event) => setStyleProfile({ negativePrompt: event.target.value })} />
+          <label className="mb-3 block text-sm">
+            负面约束
+            <textarea className="mt-1 w-full rounded border px-3 py-2" rows={4} value={styleProfile.negativePrompt} onChange={(event) => setStyleProfile({ negativePrompt: event.target.value })} />
+          </label>
           <div className="text-sm text-[#6d7180]">导出格式: PNG / Sprite Sheet / JSON</div>
         </section>
       </div>
@@ -172,7 +203,7 @@ const assetTypes = [
   ["character", "角色"],
   ["prop", "道具"],
   ["icon", "UI 图标"],
-  ["tile", "Tile"],
+  ["tile", "地图瓦片"],
   ["effect", "特效"]
 ];
 
@@ -180,7 +211,7 @@ const styles = [
   ["pixel_art", "像素风"],
   ["cartoon", "卡通风"],
   ["hand_drawn", "手绘风"],
-  ["dark_fantasy", "暗黑风"],
+  ["dark_fantasy", "暗黑幻想"],
   ["chibi", "Q版"]
 ];
 
@@ -236,7 +267,7 @@ function NumberInput({
         min={min}
         max={max}
         value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
+        onChange={(event) => onChange(Math.min(max, Math.max(min, Number(event.target.value) || min)))}
       />
     </label>
   );

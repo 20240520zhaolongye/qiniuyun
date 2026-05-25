@@ -11,10 +11,10 @@
 namespace spriteforge {
 
 const std::vector<Request> kSampleRequests = {
-    {"blue_slime_idle", "蓝色史莱姆怪物，圆形身体，微笑表情，适合横版幻想 RPG", "monster", "pixel_art", "32x32", "side", "idle", 4, 8, "generic"},
-    {"forest_sword_icon", "绿色宝石短剑图标，金属剑刃，木质握柄，适合背包 UI", "icon", "cartoon", "64x64", "front", "static", 1, 8, "generic"},
-    {"grass_tile", "明亮草地地面块，带少量小花和泥土边缘，可拼接", "tile", "pixel_art", "32x32", "top_down", "static", 1, 8, "generic"},
-    {"fireball_cast", "橙红色火球技能特效，从小火苗逐渐膨胀", "effect", "cartoon", "64x64", "side", "attack", 6, 8, "generic"}};
+    {"blue_slime_idle", "蓝色史莱姆怪物，圆形身体，微笑表情，适合横版幻想 RPG", "monster", "pixel_art", "128x128", "side", "idle", 4, 8, "generic"},
+    {"forest_sword_icon", "绿色宝石短剑图标，金属剑刃，木质握柄，适合背包 UI", "icon", "cartoon", "256x256", "front", "static", 1, 8, "generic"},
+    {"grass_tile", "明亮草地地面块，带少量小花和泥土边缘，可拼接", "tile", "pixel_art", "128x128", "top_down", "static", 1, 8, "generic"},
+    {"fireball_cast", "橙红色火球技能特效，从小火苗逐渐膨胀", "effect", "cartoon", "256x256", "side", "attack", 6, 8, "generic"}};
 
 namespace {
 
@@ -167,9 +167,9 @@ std::string build_prompt(const Request& request, const StyleProfile& style_profi
   prompt << "主色板：" << join_palette(style_profile.colorPalette) << "\n";
   prompt << "线条风格：" << style_profile.lineStyle << "\n";
   prompt << "光照方式：" << style_profile.lighting << "\n";
-  prompt << "动画：" ;
+  prompt << "动画：";
   if (request.frameCount > 1) {
-    prompt << request.animation << " 动画，" << request.frameCount << " 帧";
+    prompt << request.animation << " 动画，" << request.frameCount << " 帧，" << request.fps << " FPS";
   } else {
     prompt << "单帧静态素材";
   }
@@ -269,7 +269,7 @@ Request request_from_json(const Json& json) {
   request.description = json.get("description").string_or("");
   request.assetType = json.get("assetType").string_or("monster");
   request.style = json.get("style").string_or("pixel_art");
-  request.size = json.get("size").string_or("32x32");
+  request.size = json.get("size").string_or("128x128");
   request.view = json.get("view").string_or("side");
   request.animation = json.get("animation").string_or("idle");
   request.frameCount = static_cast<int>(json.get("frameCount").as_number(1));
@@ -280,12 +280,12 @@ Request request_from_json(const Json& json) {
 
 StyleProfile style_profile_from_json(const Json& json) {
   StyleProfile profile;
-  profile.styleName = json.get("styleName").string_or("bright_pixel_fantasy");
+  profile.styleName = json.get("styleName").string_or("明亮像素幻想");
   profile.colorPalette = normalize_palette(json.get("colorPalette"));
-  profile.lineStyle = json.get("lineStyle").string_or("clean dark outline");
-  profile.lighting = json.get("lighting").string_or("simple top-left cel shading");
-  profile.worldKeywords = json.get("worldKeywords").string_or("");
-  profile.negativePrompt = json.get("negativePrompt").string_or("");
+  profile.lineStyle = json.get("lineStyle").string_or("干净的深色描边");
+  profile.lighting = json.get("lighting").string_or("左上方简化明暗光照");
+  profile.worldKeywords = json.get("worldKeywords").string_or("明亮幻想，可读性强，适合低成本原型");
+  profile.negativePrompt = json.get("negativePrompt").string_or("模糊，写实照片，3D渲染，复杂背景，水印，文字");
   return profile;
 }
 

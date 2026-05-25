@@ -31,21 +31,21 @@ export const useAssetStore = create<StoreState>((set, get) => ({
     exportTarget: "unity"
   },
   styleProfile: {
-    styleName: "bright_pixel_fantasy",
+    styleName: "明亮像素幻想",
     colorPalette: ["#2E5EAA", "#43A047", "#FDD835", "#EF5350", "#FFFFFF", "#172033"],
-    lineStyle: "clean dark outline",
-    lighting: "simple top-left cel shading",
-    worldKeywords: "bright fantasy, readable silhouette, low cost prototype",
-    negativePrompt: "blurry, realistic photo, 3D render, complex background, watermark, text"
+    lineStyle: "干净的深色描边",
+    lighting: "左上方简化明暗光照",
+    worldKeywords: "明亮幻想，可读性强，适合低成本原型",
+    negativePrompt: "模糊，写实照片，3D渲染，复杂背景，水印，文字"
   },
   plan: null,
   asset: null,
   loading: false,
   error: null,
-  setRequest: (patch) => set((state) => ({ request: { ...state.request, ...patch } })),
-  setStyleProfile: (patch) => set((state) => ({ styleProfile: { ...state.styleProfile, ...patch } })),
+  setRequest: (patch) => set((state) => ({ request: { ...state.request, ...patch }, asset: null })),
+  setStyleProfile: (patch) => set((state) => ({ styleProfile: { ...state.styleProfile, ...patch }, asset: null })),
   generatePlan: async () => {
-    set({ loading: true, error: null });
+    set({ loading: true, error: null, asset: null });
     try {
       const response = await fetch(`${apiBase}/assets/plan`, {
         method: "POST",
@@ -56,7 +56,7 @@ export const useAssetStore = create<StoreState>((set, get) => ({
       const plan = (await response.json()) as AssetPlan;
       set({ plan });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : "后端连接失败，请使用 npm run dev 重新启动项目" });
+      set({ error: error instanceof Error ? error.message : "无法生成 Prompt，请确认后端服务已启动。" });
     } finally {
       set({ loading: false });
     }
@@ -73,7 +73,7 @@ export const useAssetStore = create<StoreState>((set, get) => ({
       const asset = (await response.json()) as GeneratedAsset;
       set({ asset, plan: asset.plan });
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : "素材生成失败，请检查后端服务是否启动" });
+      set({ error: error instanceof Error ? error.message : "素材生成失败，请检查后端服务是否启动。" });
     } finally {
       set({ loading: false });
     }

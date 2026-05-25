@@ -6,7 +6,7 @@ class AssetRequest(BaseModel):
     description: str = "蓝色史莱姆怪物，圆形身体，微笑表情，适合横版幻想 RPG"
     assetType: str = "monster"
     style: str = "pixel_art"
-    size: str = "32x32"
+    size: str = "128x128"
     view: str = "side"
     animation: str = "idle"
     frameCount: int = Field(default=4, ge=1, le=8)
@@ -15,14 +15,14 @@ class AssetRequest(BaseModel):
 
 
 class StyleProfile(BaseModel):
-    styleName: str = "bright_pixel_fantasy"
+    styleName: str = "明亮像素幻想"
     colorPalette: list[str] = Field(
         default_factory=lambda: ["#2E5EAA", "#43A047", "#FDD835", "#EF5350", "#FFFFFF", "#172033"]
     )
-    lineStyle: str = "clean dark outline"
-    lighting: str = "simple top-left cel shading"
-    worldKeywords: str = "bright fantasy, readable silhouette, low cost prototype"
-    negativePrompt: str = "blurry, realistic photo, 3D render, complex background, watermark, text"
+    lineStyle: str = "干净的深色描边"
+    lighting: str = "左上方简化明暗光照"
+    worldKeywords: str = "明亮幻想，可读性强，适合低成本原型"
+    negativePrompt: str = "模糊，写实照片，3D渲染，复杂背景，水印，文字"
 
 
 class GeneratePayload(BaseModel):

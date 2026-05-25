@@ -41,7 +41,7 @@ test("static server serves the app shell and modules", async () => {
           description: "blue slime",
           assetType: "monster",
           style: "pixel_art",
-          size: "32x32",
+          size: "128x128",
           view: "side",
           animation: "idle",
           frameCount: 4,
@@ -50,10 +50,10 @@ test("static server serves the app shell and modules", async () => {
         },
         styleProfile: {
           colorPalette: ["#2E5EAA", "#43A047", "#FDD835", "#EF5350", "#FFFFFF", "#172033"],
-          lineStyle: "clean dark outline",
-          lighting: "simple top-left cel shading",
-          worldKeywords: "bright fantasy",
-          negativePrompt: "watermark"
+          lineStyle: "干净的深色描边",
+          lighting: "左上方简化明暗光照",
+          worldKeywords: "明亮幻想",
+          negativePrompt: "水印"
         }
       })
     });
@@ -69,7 +69,7 @@ test("static server serves the app shell and modules", async () => {
     assert.equal(health.service, "SpriteForge C++");
     assert.equal(plan.metadata.assetName, "blue_slime_idle");
     assert.equal(plan.export.files.png, "blue_slime_idle.png");
-    assert.match(plan.prompt, /32x32/);
+    assert.match(plan.prompt, /128x128/);
   } finally {
     child.kill("SIGTERM");
     await once(child, "exit").catch(() => {});
