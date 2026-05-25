@@ -18,9 +18,6 @@ function App() {
     const layer = new Konva.Layer();
     layer.add(new Konva.Rect({ x: 0, y: 0, width: stageSize, height: stageSize, fill: "#eef2f6" }));
 
-    let animation: Konva.Animation | null = null;
-    let frameNode: Konva.Image | null = null;
-
     if (asset && plan) {
       const image = new window.Image();
       image.crossOrigin = "anonymous";
@@ -28,32 +25,22 @@ function App() {
         const frameWidth = plan.metadata.frameWidth;
         const frameHeight = plan.metadata.frameHeight;
         const frameCount = Math.max(1, plan.metadata.frameCount);
+        const sheetWidth = frameWidth * frameCount;
         const imageSize = Math.min(stageSize - 48, stageSize - 48);
-        const scale = Math.min(imageSize / frameWidth, imageSize / frameHeight);
-        const previewWidth = frameWidth * scale;
+        const scale = Math.min(imageSize / sheetWidth, imageSize / frameHeight);
+        const previewWidth = sheetWidth * scale;
         const previewHeight = frameHeight * scale;
 
-        frameNode = new Konva.Image({
+        const sheetNode = new Konva.Image({
           image,
           x: (stageSize - previewWidth) / 2,
           y: (stageSize - previewHeight) / 2,
           width: previewWidth,
           height: previewHeight,
-          crop: { x: 0, y: 0, width: frameWidth, height: frameHeight },
           imageSmoothingEnabled: plan.metadata.style !== "pixel_art"
         });
-        layer.add(frameNode);
+        layer.add(sheetNode);
         layer.draw();
-
-        if (frameCount > 1) {
-          animation = new Konva.Animation((frame) => {
-            if (!frameNode || !frame) return;
-            const duration = Math.max(1, 1000 / Math.max(1, plan.metadata.fps));
-            const frameIndex = Math.floor(frame.time / duration) % frameCount;
-            frameNode.crop({ x: frameIndex * frameWidth, y: 0, width: frameWidth, height: frameHeight });
-          }, layer);
-          animation.start();
-        }
       };
       image.onerror = () => {
         setPreviewError("图片加载失败，请检查后端服务和素材下载接口。");
@@ -75,7 +62,6 @@ function App() {
 
     stage.add(layer);
     return () => {
-      animation?.stop();
       stage.destroy();
     };
   }, [plan, asset]);
