@@ -19,26 +19,26 @@ const std::vector<Request> kSampleRequests = {
 namespace {
 
 const std::unordered_map<std::string, std::string> kStyleLabels = {
-    {"pixel_art", "pixel art"},
-    {"cartoon", "cartoon"},
-    {"hand_drawn", "hand drawn"},
-    {"dark_fantasy", "dark fantasy"},
-    {"chibi", "chibi"}};
+    {"pixel_art", "像素风"},
+    {"cartoon", "卡通风"},
+    {"hand_drawn", "手绘风"},
+    {"dark_fantasy", "暗黑幻想风"},
+    {"chibi", "Q版"}};
 
 const std::unordered_map<std::string, std::string> kStyleDetails = {
-    {"pixel_art", "low resolution sprite, crisp pixel edges, limited color palette"},
-    {"cartoon", "bold readable forms, clean color blocks, playful proportions"},
-    {"hand_drawn", "soft irregular outline, painterly 2D game asset, handmade feeling"},
-    {"dark_fantasy", "moody contrast, sharp silhouette, restrained fantasy palette"},
-    {"chibi", "cute large head, compact body, friendly toy-like proportions"}};
+    {"pixel_art", "低分辨率精灵图，清晰像素边缘，有限色板"},
+    {"cartoon", "轮廓清晰，色块干净，比例活泼"},
+    {"hand_drawn", "柔和手绘轮廓，适合 2D 游戏的绘制质感"},
+    {"dark_fantasy", "高对比暗色氛围，剪影明确，幻想题材色彩克制"},
+    {"chibi", "头身比例可爱，体型紧凑，适合轻量游戏角色"}};
 
 const std::unordered_map<std::string, std::string> kAssetTypeHints = {
-    {"monster", "enemy creature sprite"},
-    {"character", "playable character sprite"},
-    {"prop", "collectible or interactive prop"},
-    {"icon", "square UI icon"},
-    {"tile", "seamless terrain tile"},
-    {"effect", "animated spell or impact effect"}};
+    {"monster", "敌人怪物精灵"},
+    {"character", "可操控角色精灵"},
+    {"prop", "可收集或可交互道具"},
+    {"icon", "方形 UI 图标"},
+    {"tile", "可拼接地图瓦片"},
+    {"effect", "技能或打击特效"}};
 
 std::string to_lower(std::string text) {
   for (char& ch : text) {
@@ -158,30 +158,30 @@ std::string build_prompt(const Request& request, const StyleProfile& style_profi
   const std::string details = kStyleDetails.count(request.style) ? kStyleDetails.at(request.style) : kStyleDetails.at("pixel_art");
 
   std::ostringstream prompt;
-  prompt << "Generate a " << width << "x" << height << " " << style_label << " 2D game asset.\n";
-  prompt << "Asset type: " << request.assetType << " (" << type_hint << ")\n";
-  prompt << "Description: " << request.description << "\n";
-  prompt << "Camera view: " << request.view << "\n";
-  prompt << "Background: transparent\n";
-  prompt << "Art direction: " << details << "; " << style_profile.worldKeywords << "\n";
-  prompt << "Color palette: " << join_palette(style_profile.colorPalette) << "\n";
-  prompt << "Line style: " << style_profile.lineStyle << "\n";
-  prompt << "Lighting: " << style_profile.lighting << "\n";
-  prompt << "Animation: ";
+  prompt << "生成一个 " << width << "x" << height << " 的" << style_label << " 2D 游戏素材。\n";
+  prompt << "素材类型：" << request.assetType << "（" << type_hint << "）\n";
+  prompt << "素材描述：" << request.description << "\n";
+  prompt << "视角：" << request.view << "\n";
+  prompt << "背景：透明背景\n";
+  prompt << "美术方向：" << details << "；" << style_profile.worldKeywords << "\n";
+  prompt << "主色板：" << join_palette(style_profile.colorPalette) << "\n";
+  prompt << "线条风格：" << style_profile.lineStyle << "\n";
+  prompt << "光照方式：" << style_profile.lighting << "\n";
+  prompt << "动画：" ;
   if (request.frameCount > 1) {
-    prompt << request.animation << " animation, " << request.frameCount << " frames";
+    prompt << request.animation << " 动画，" << request.frameCount << " 帧";
   } else {
-    prompt << "single static frame";
+    prompt << "单帧静态素材";
   }
-  prompt << "\n\nRequirements:\n";
-  prompt << "- game-ready 2D asset\n";
-  prompt << "- centered composition\n";
-  prompt << "- clean readable silhouette\n";
-  prompt << "- consistent project style\n";
-  prompt << "- transparent background\n";
-  prompt << "- suitable for Unity, Godot, and Cocos Creator\n";
-  prompt << "- no text, no watermark, no complex background\n\n";
-  prompt << "Negative prompt: " << style_profile.negativePrompt;
+  prompt << "\n\n生成要求：\n";
+  prompt << "- 可直接用于 2D 游戏开发\n";
+  prompt << "- 主体居中\n";
+  prompt << "- 剪影清晰，易于识别\n";
+  prompt << "- 与项目风格保持一致\n";
+  prompt << "- 透明背景\n";
+  prompt << "- 适合 Unity、Godot 和 Cocos Creator 工作流\n";
+  prompt << "- 不要文字、水印或复杂背景\n\n";
+  prompt << "负面约束：" << style_profile.negativePrompt;
   return prompt.str();
 }
 
@@ -211,11 +211,7 @@ Plan create_asset_plan(const Request& request, const StyleProfile& style_profile
                                  {"frameCount", frame_count},
                                  {"fps", fps},
                                  {"exportTarget", request.exportTarget}}},
-      {"styleProfile", Json::Object{{"styleName", style_profile.styleName},
-                                     {"palette", palette_to_json(effective_palette)},
-                                     {"lineStyle", style_profile.lineStyle},
-                                     {"lighting", style_profile.lighting},
-                                     {"worldKeywords", style_profile.worldKeywords}}}};
+      {"palette", palette_to_json(effective_palette)}};
 
   Plan plan;
   plan.seed = make_seed(seed_input);
@@ -237,10 +233,6 @@ Plan create_asset_plan(const Request& request, const StyleProfile& style_profile
       {"palette", palette_to_json(effective_palette)},
       {"renderMode", request.style == "pixel_art" ? "pixel" : "smooth"},
       {"assetType", request.assetType},
-      {"style", request.style},
-      {"styleName", style_profile.styleName},
-      {"lineStyle", style_profile.lineStyle},
-      {"lighting", style_profile.lighting},
       {"animation", request.animation},
       {"view", request.view}};
   return plan;
