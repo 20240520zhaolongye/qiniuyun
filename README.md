@@ -2,7 +2,7 @@
 
 SpriteForge 是一个面向 2D 游戏开发的素材生成工具。当前版本已经迁移为 **C++ 核心 + Python FastAPI + React/TypeScript/Vite/Tailwind/Zustand/Konva** 的分层架构。
 
-用户可以输入文本描述或简单参数，生成结构化 Prompt、透明 PNG、Sprite Sheet 和 JSON 元数据。图像生成支持 Mock Generator、ComfyUI API 和火山方舟 API：默认使用 Mock，配置环境变量后可切换到真实生成服务。
+用户可以输入文本描述或简单参数，生成结构化 Prompt、透明 PNG、Sprite Sheet 和 JSON 元数据。图像生成支持火山方舟 API、ComfyUI API 和可选 Mock Generator；当前默认使用火山方舟 API，生成失败时不会自动回退到 Mock，便于及时发现真实接口配置或额度问题。
 
 ## 技术栈
 
@@ -24,7 +24,7 @@ frontend/
 
 backend/
   FastAPI -> C++ CLI -> generation plan
-          -> Mock Generator or ComfyUI API -> PNG / Sprite Sheet
+          -> Ark API / ComfyUI API / optional Mock Generator -> PNG / Sprite Sheet
           -> SQLite -> generation records
 
 src_cpp/
@@ -118,9 +118,32 @@ GET  http://127.0.0.1:8000/api/assets/{id}/download/sheet
 GET  http://127.0.0.1:8000/api/assets/{id}/download/json
 ```
 
+## 图像生成 Provider
+
+当前默认 Provider 是火山方舟 API：
+
+```text
+SPRITEFORGE_AI_PROVIDER=ark
+SPRITEFORGE_AI_FALLBACK=none
+```
+
+如果未配置 `ARK_API_KEY` 或模型不可用，后端会直接返回错误，不会生成本地 Mock 占位图。只有显式设置下面变量时才允许回退：
+
+```powershell
+$env:SPRITEFORGE_AI_FALLBACK="mock"
+```
+
+Mock Generator 仅用于离线开发和测试，不作为正式演示的默认生成链路。
+
+可通过接口查看当前生成配置：
+
+```text
+GET http://127.0.0.1:8000/api/config/generation
+```
+
 ## 接入 ComfyUI
 
-默认不配置时使用 Mock Generator。要使用 ComfyUI，先启动 ComfyUI 服务并导出 API 格式工作流 JSON，然后设置环境变量：
+要使用 ComfyUI，先启动 ComfyUI 服务并导出 API 格式工作流 JSON，然后设置环境变量：
 
 ```powershell
 $env:SPRITEFORGE_AI_PROVIDER="comfyui"
@@ -150,9 +173,10 @@ npm run dev:ark
 
 行为说明：
 
-- `SPRITEFORGE_AI_PROVIDER=mock` 或未配置：使用内置 Pillow Mock Generator。
+- `SPRITEFORGE_AI_PROVIDER=ark` 或未配置：使用火山方舟 API。
+- `SPRITEFORGE_AI_PROVIDER=mock`：显式使用内置 Pillow Mock Generator，仅建议离线开发或测试使用。
 - `SPRITEFORGE_AI_PROVIDER=comfyui`：调用 ComfyUI `/prompt`、`/history/{prompt_id}`、`/view` 接口生成图片。
-- `SPRITEFORGE_AI_FALLBACK=mock` 默认开启：ComfyUI 未启动、工作流错误或超时时，会回退到 Mock Generator，保证演示不中断。
+- `SPRITEFORGE_AI_FALLBACK=mock`：显式开启 Mock 回退；默认不回退。
 - 如果 ComfyUI 输出单张图，会自动缩放成单帧并复制到 Sprite Sheet；如果输出横向多帧图，会按当前帧宽和帧数切分。
 
 ## 接入火山方舟
@@ -180,7 +204,7 @@ npm run dev
 - `ARK_IMAGE_RESPONSE_FORMAT`：默认 `url`，也支持 `b64_json`。
 - `ARK_IMAGE_WATERMARK`：是否添加水印，默认 `false`。
 - `ARK_IMAGE_PATH`：默认 `/images/generations`，如果控制台文档给出的路径不同，可以覆盖。
-- `SPRITEFORGE_AI_FALLBACK=mock` 默认开启：Key、模型名、网络或额度异常时会回退 Mock，并在元数据里记录 warning。
+- `SPRITEFORGE_AI_FALLBACK=mock`：显式开启 Mock 回退；默认不回退，Key、模型名、网络或额度异常会直接返回错误。
 
 ### 使用火山方舟生成 Prompt
 
