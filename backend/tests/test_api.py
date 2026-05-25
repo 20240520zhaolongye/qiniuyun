@@ -188,6 +188,26 @@ def test_ai_generator_falls_back_to_mock_when_ark_unconfigured(tmp_path, monkeyp
     assert plan["metadata"]["generationProvider"] == "mock_fallback"
 
 
+def test_prepare_frames_extracts_grid_sheet():
+    from app.services.ai_generator import _prepare_frames
+
+    source = Image.new("RGBA", (200, 200), (0, 0, 0, 0))
+    colors = [(255, 0, 0, 255), (0, 255, 0, 255), (0, 0, 255, 255), (255, 255, 0, 255)]
+    positions = [(0, 0), (100, 0), (0, 100), (100, 100)]
+    for color, (x, y) in zip(colors, positions):
+        for px in range(x + 20, x + 80):
+            for py in range(y + 20, y + 80):
+                source.putpixel((px, py), color)
+
+    frames = _prepare_frames(source, 64, 64, 4)
+
+    assert len(frames) == 4
+    assert frames[0].getpixel((32, 32))[:3] == (255, 0, 0)
+    assert frames[1].getpixel((32, 32))[:3] == (0, 255, 0)
+    assert frames[2].getpixel((32, 32))[:3] == (0, 0, 255)
+    assert frames[3].getpixel((32, 32))[:3] == (255, 255, 0)
+
+
 def test_prompt_override_replaces_generated_prompt():
     from app.services.cpp_engine import create_plan
 

@@ -361,7 +361,55 @@ def _prepare_frames(image: Image.Image, frame_width: int, frame_height: int, fra
     elif looks_like_sheet and image.width >= sheet_width and image.height >= frame_height:
         sheet = image.resize((sheet_width, frame_height), Image.Resampling.LANCZOS)
     else:
+        grid_frames = _extract_grid_frames(image, frame_width, frame_height, frame_count)
+        if grid_frames:
+            return grid_frames
         frame = image.resize((frame_width, frame_height), Image.Resampling.LANCZOS)
         return [frame.copy() for _ in range(frame_count)]
 
     return [sheet.crop((index * frame_width, 0, (index + 1) * frame_width, frame_height)) for index in range(frame_count)]
+
+
+def _extract_grid_frames(image: Image.Image, frame_width: int, frame_height: int, frame_count: int) -> list[Image.Image] | None:
+    if frame_count <= 1:
+        return None
+
+    candidates: list[tuple[int, int]] = []
+    for columns in range(2, frame_count + 1):
+        rows = (frame_count + columns - 1) // columns
+        if columns * rows >= frame_count:
+            candidates.append((columns, rows))
+    candidates.sort(key=lambda item: (abs((image.width / image.height) - (item[0] / item[1])), item[0] * item[1]))
+
+    for columns, rows in candidates:
+        cell_width = image.width / columns
+        cell_height = image.height / rows
+        if cell_width < 8 or cell_height < 8:
+            continue
+        frames: list[Image.Image] = []
+        for index in range(frame_count):
+            column = index % columns
+            row = index // columns
+            left = round(column * cell_width)
+            top = round(row * cell_height)
+            right = round((column + 1) * cell_width)
+            bottom = round((row + 1) * cell_height)
+            cell = image.crop((left, top, right, bottom))
+            frames.append(cell.resize((frame_width, frame_height), Image.Resampling.LANCZOS))
+        if _frames_are_visibly_different(frames):
+            return frames
+    return None
+
+
+def _frames_are_visibly_different(frames: list[Image.Image]) -> bool:
+    if len(frames) < 2:
+        return False
+    first = frames[0].resize((32, 32), Image.Resampling.BILINEAR).convert("RGB")
+    for frame in frames[1:]:
+        sample = frame.resize((32, 32), Image.Resampling.BILINEAR).convert("RGB")
+        total = 0
+        for first_pixel, sample_pixel in zip(first.getdata(), sample.getdata()):
+            total += sum(abs(a - b) for a, b in zip(first_pixel, sample_pixel))
+        if total / (32 * 32 * 3) > 2:
+            return True
+    return False
