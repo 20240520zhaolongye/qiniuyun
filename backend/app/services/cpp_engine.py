@@ -3,6 +3,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+from app.services.prompt_provider import maybe_enhance_prompt
+
 ROOT_DIR = Path(__file__).resolve().parents[3]
 CLI_PATH = ROOT_DIR / "build" / "spriteforge_cli.exe"
 
@@ -98,7 +100,10 @@ def create_plan(payload: dict[str, Any]) -> dict[str, Any]:
     except json.JSONDecodeError as exc:
         raise CppEngineError(f"Invalid C++ JSON output: {exc}") from exc
     prompt_override = payload.get("promptOverride")
-    plan["prompt"] = prompt_override.strip() if isinstance(prompt_override, str) and prompt_override.strip() else _build_prompt(payload, plan)
+    if isinstance(prompt_override, str) and prompt_override.strip():
+        plan["prompt"] = prompt_override.strip()
+    else:
+        plan["prompt"] = maybe_enhance_prompt(_build_prompt(payload, plan), payload, plan["metadata"])
     plan.setdefault("draw", {})
     plan["draw"]["description"] = payload["request"].get("description", "")
     plan["draw"]["assetName"] = payload["request"].get("assetName", "")

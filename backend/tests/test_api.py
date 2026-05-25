@@ -217,3 +217,39 @@ def test_prompt_override_replaces_generated_prompt():
 
     plan = create_plan(payload)
     assert plan["prompt"] == "只生成一把红色长剑，透明背景"
+
+
+def test_prompt_provider_falls_back_to_local_when_ark_unconfigured(monkeypatch):
+    from app.services.cpp_engine import create_plan
+
+    monkeypatch.setenv("SPRITEFORGE_PROMPT_PROVIDER", "ark")
+    monkeypatch.delenv("ARK_API_KEY", raising=False)
+    monkeypatch.delenv("VOLCENGINE_API_KEY", raising=False)
+    monkeypatch.setenv("SPRITEFORGE_PROMPT_FALLBACK", "local")
+
+    payload = {
+        "request": {
+            "assetName": "prompt_fallback",
+            "description": "二次元少年",
+            "assetType": "character",
+            "style": "cartoon",
+            "size": "128x128",
+            "view": "front",
+            "animation": "static",
+            "frameCount": 1,
+            "fps": 8,
+            "exportTarget": "unity",
+        },
+        "styleProfile": {
+            "styleName": "明亮像素幻想",
+            "colorPalette": ["#2E5EAA", "#43A047", "#FDD835", "#EF5350", "#FFFFFF", "#172033"],
+            "lineStyle": "干净的深色描边",
+            "lighting": "左上方简化明暗光照",
+            "worldKeywords": "明亮幻想",
+            "negativePrompt": "水印",
+        },
+    }
+
+    plan = create_plan(payload)
+    assert "二次元少年" in plan["prompt"]
+    assert "Prompt 生成提示" in plan["prompt"]

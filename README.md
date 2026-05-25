@@ -169,6 +169,24 @@ npm run dev
 - `ARK_IMAGE_PATH`：默认 `/images/generations`，如果控制台文档给出的路径不同，可以覆盖。
 - `SPRITEFORGE_AI_FALLBACK=mock` 默认开启：Key、模型名、网络或额度异常时会回退 Mock，并在元数据里记录 warning。
 
+### 使用火山方舟生成 Prompt
+
+如果你当前只有 Chat 推理接入点，可以先用火山方舟生成/优化 Prompt，图片仍可用 Mock 或其他图片 Provider：
+
+```powershell
+$env:SPRITEFORGE_PROMPT_PROVIDER="ark"
+$env:ARK_API_KEY="你的火山方舟 API Key"
+$env:ARK_CHAT_MODEL="ep-20260525165430-pw5fp"
+$env:ARK_BASE_URL="https://ark.cn-beijing.volces.com/api/v3"
+npm run dev
+```
+
+说明：
+
+- `SPRITEFORGE_PROMPT_PROVIDER=ark`：点击“生成 Prompt”时调用火山方舟 Chat Completions。
+- `ARK_CHAT_MODEL`：Chat 推理接入点 ID，例如 `ep-20260525165430-pw5fp`。
+- 这只负责生成 Prompt 文本；如果要真实图片生成，还需要配置图片生成模型或其他图片 Provider。
+
 ## 测试
 
 ```bash
