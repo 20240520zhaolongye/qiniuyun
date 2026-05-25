@@ -151,13 +151,15 @@ def test_ai_generator_falls_back_to_mock_when_comfyui_unavailable(tmp_path, monk
     assert plan["metadata"]["generationProvider"] == "mock_fallback"
 
 
-def test_ai_generator_falls_back_to_mock_when_ark_unconfigured(tmp_path, monkeypatch):
-    from app.services.ai_generator import save_outputs
+def test_ai_generator_raises_when_ark_unconfigured_without_fallback(tmp_path, monkeypatch):
+    import pytest
+
+    from app.services.ai_generator import AiGenerationError, save_outputs
 
     monkeypatch.setenv("SPRITEFORGE_AI_PROVIDER", "ark")
     monkeypatch.delenv("ARK_API_KEY", raising=False)
     monkeypatch.delenv("VOLCENGINE_API_KEY", raising=False)
-    monkeypatch.setenv("SPRITEFORGE_AI_FALLBACK", "mock")
+    monkeypatch.delenv("SPRITEFORGE_AI_FALLBACK", raising=False)
 
     plan = {
         "seed": 1,
@@ -176,6 +178,41 @@ def test_ai_generator_falls_back_to_mock_when_ark_unconfigured(tmp_path, monkeyp
             "assetType": "monster",
             "description": "蓝色史莱姆",
             "assetName": "ark_fallback_sword",
+            "palette": ["#2E5EAA", "#43A047", "#FDD835", "#EF5350", "#FFFFFF", "#172033"],
+            "view": "side",
+            "animation": "idle",
+        },
+    }
+
+    with pytest.raises(AiGenerationError):
+        save_outputs(plan, tmp_path)
+
+
+def test_ai_generator_can_explicitly_fallback_to_mock_when_ark_unconfigured(tmp_path, monkeypatch):
+    from app.services.ai_generator import save_outputs
+
+    monkeypatch.setenv("SPRITEFORGE_AI_PROVIDER", "ark")
+    monkeypatch.delenv("ARK_API_KEY", raising=False)
+    monkeypatch.delenv("VOLCENGINE_API_KEY", raising=False)
+    monkeypatch.setenv("SPRITEFORGE_AI_FALLBACK", "mock")
+
+    plan = {
+        "seed": 1,
+        "prompt": "只生成一把红色长剑，透明背景",
+        "metadata": {
+            "assetName": "ark_explicit_fallback_sword",
+            "assetType": "monster",
+            "style": "pixel_art",
+            "frameWidth": 128,
+            "frameHeight": 128,
+            "frameCount": 1,
+            "animationName": "idle",
+            "fps": 8,
+        },
+        "draw": {
+            "assetType": "monster",
+            "description": "蓝色史莱姆",
+            "assetName": "ark_explicit_fallback_sword",
             "palette": ["#2E5EAA", "#43A047", "#FDD835", "#EF5350", "#FFFFFF", "#172033"],
             "view": "side",
             "animation": "idle",

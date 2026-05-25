@@ -1,6 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $env:SPRITEFORGE_AI_PROVIDER = "ark"
+Remove-Item Env:\SPRITEFORGE_AI_FALLBACK -ErrorAction SilentlyContinue
 Remove-Item Env:\SPRITEFORGE_PROMPT_PROVIDER -ErrorAction SilentlyContinue
 $env:ARK_BASE_URL = if ($env:ARK_BASE_URL) { $env:ARK_BASE_URL } else { "https://ark.cn-beijing.volces.com/api/v3" }
 $env:ARK_IMAGE_MODEL = if ($env:ARK_IMAGE_MODEL) { $env:ARK_IMAGE_MODEL } else { "ep-20260525182237-2v79h" }

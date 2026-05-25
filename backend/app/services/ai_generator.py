@@ -27,7 +27,7 @@ def save_outputs(plan: dict[str, Any], output_dir: Path) -> dict[str, str]:
                 return _save_ark_outputs(plan, output_dir)
             return _save_comfyui_outputs(plan, output_dir)
         except Exception as exc:
-            if os.environ.get("SPRITEFORGE_AI_FALLBACK", "mock").strip().lower() == "mock":
+            if os.environ.get("SPRITEFORGE_AI_FALLBACK", "none").strip().lower() == "mock":
                 plan.setdefault("metadata", {})["generationProvider"] = "mock_fallback"
                 plan["metadata"]["generationWarning"] = str(exc)
                 return save_mock_outputs(plan, output_dir)
