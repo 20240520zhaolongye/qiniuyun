@@ -31,7 +31,7 @@ def generate_frames(plan: dict[str, Any]) -> list[Image.Image]:
     style = metadata.get("style", draw_info.get("style", "pixel_art"))
     view = draw_info.get("view", "side")
     animation = draw_info.get("animation", "idle")
-    subject = _infer_subject(draw_info.get("description", ""), draw_info.get("assetName", ""), draw_info.get("assetType", "monster"))
+    subject = _infer_subject(plan.get("prompt", ""), draw_info.get("description", ""), draw_info.get("assetName", ""), draw_info.get("assetType", "monster"))
     rng = random.Random(_seed(plan))
 
     frames: list[Image.Image] = []
@@ -68,8 +68,8 @@ def generate_frames(plan: dict[str, Any]) -> list[Image.Image]:
     return frames
 
 
-def _infer_subject(description: str, asset_name: str, asset_type: str) -> str:
-    text = f"{description} {asset_name}".lower()
+def _infer_subject(prompt: str, description: str, asset_name: str, asset_type: str) -> str:
+    text = f"{prompt} {description} {asset_name}".lower()
     if any(keyword in text for keyword in ("剑", "刀", "sword", "blade", "匕首", "长矛", "枪")):
         return "sword"
     if any(keyword in text for keyword in ("盾", "shield")):

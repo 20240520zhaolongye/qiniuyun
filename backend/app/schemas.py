@@ -28,6 +28,7 @@ class StyleProfile(BaseModel):
 class GeneratePayload(BaseModel):
     request: AssetRequest
     styleProfile: StyleProfile
+    promptOverride: str | None = None
 
 
 class GenerateResponse(BaseModel):

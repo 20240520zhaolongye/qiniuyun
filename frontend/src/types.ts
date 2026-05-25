@@ -45,3 +45,9 @@ export type GeneratedAsset = {
     metadata: string;
   };
 };
+
+export type GeneratePayload = {
+  request: AssetRequest;
+  styleProfile: StyleProfile;
+  promptOverride?: string;
+};

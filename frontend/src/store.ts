@@ -1,15 +1,17 @@
 import { create } from "zustand";
-import type { AssetPlan, AssetRequest, GeneratedAsset, StyleProfile } from "./types";
+import type { AssetPlan, AssetRequest, GeneratedAsset, GeneratePayload, StyleProfile } from "./types";
 
 type StoreState = {
   request: AssetRequest;
   styleProfile: StyleProfile;
   plan: AssetPlan | null;
   asset: GeneratedAsset | null;
+  promptText: string;
   loading: boolean;
   error: string | null;
   setRequest: (patch: Partial<AssetRequest>) => void;
   setStyleProfile: (patch: Partial<StyleProfile>) => void;
+  setPromptText: (promptText: string) => void;
   generatePlan: () => Promise<void>;
   generateAsset: () => Promise<void>;
 };
@@ -57,12 +59,14 @@ export const useAssetStore = create<StoreState>((set, get) => ({
   styleProfile: defaultStyleProfile,
   plan: null,
   asset: null,
+  promptText: "",
   loading: false,
   error: null,
   setRequest: (patch) =>
     set((state) => ({
       request: { ...state.request, ...patch },
       plan: null,
+      promptText: "",
       asset: null,
       error: null
     })),
@@ -70,17 +74,20 @@ export const useAssetStore = create<StoreState>((set, get) => ({
     set((state) => ({
       styleProfile: { ...state.styleProfile, ...patch },
       plan: null,
+      promptText: "",
       asset: null,
       error: null
     })),
+  setPromptText: (promptText) => set({ promptText, error: null }),
   generatePlan: async () => {
     const requestId = ++activePlanRequest;
     set({ loading: true, error: null, asset: null });
     try {
       const { request, styleProfile } = get();
-      const plan = await postJson<AssetPlan>(`${apiBase}/assets/plan`, { request, styleProfile });
+      const payload: GeneratePayload = { request, styleProfile };
+      const plan = await postJson<AssetPlan>(`${apiBase}/assets/plan`, payload);
       if (requestId !== activePlanRequest) return;
-      set({ plan });
+      set({ plan, promptText: plan.prompt });
     } catch (error) {
       if (requestId !== activePlanRequest) return;
       set({ error: error instanceof Error ? error.message : "无法生成 Prompt，请确认后端服务已启动。" });
@@ -93,9 +100,11 @@ export const useAssetStore = create<StoreState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const { request, styleProfile } = get();
-      const asset = await postJson<GeneratedAsset>(`${apiBase}/assets/generate`, { request, styleProfile });
+      const promptOverride = get().promptText.trim() || undefined;
+      const payload: GeneratePayload = { request, styleProfile, promptOverride };
+      const asset = await postJson<GeneratedAsset>(`${apiBase}/assets/generate`, payload);
       if (requestId !== activeAssetRequest) return;
-      set({ asset, plan: asset.plan });
+      set({ asset, plan: asset.plan, promptText: asset.plan.prompt });
     } catch (error) {
       if (requestId !== activeAssetRequest) return;
       set({ error: error instanceof Error ? error.message : "素材生成失败，请检查后端服务是否启动。" });

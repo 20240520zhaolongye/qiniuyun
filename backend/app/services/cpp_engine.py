@@ -97,7 +97,8 @@ def create_plan(payload: dict[str, Any]) -> dict[str, Any]:
         plan = json.loads(process.stdout)
     except json.JSONDecodeError as exc:
         raise CppEngineError(f"Invalid C++ JSON output: {exc}") from exc
-    plan["prompt"] = _build_prompt(payload, plan)
+    prompt_override = payload.get("promptOverride")
+    plan["prompt"] = prompt_override.strip() if isinstance(prompt_override, str) and prompt_override.strip() else _build_prompt(payload, plan)
     plan.setdefault("draw", {})
     plan["draw"]["description"] = payload["request"].get("description", "")
     plan["draw"]["assetName"] = payload["request"].get("assetName", "")

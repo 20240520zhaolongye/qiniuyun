@@ -149,3 +149,34 @@ def test_ai_generator_falls_back_to_mock_when_comfyui_unavailable(tmp_path, monk
     assert Path(files["png"]).exists()
     assert Path(files["sheet"]).exists()
     assert plan["metadata"]["generationProvider"] == "mock_fallback"
+
+
+def test_prompt_override_replaces_generated_prompt():
+    from app.services.cpp_engine import create_plan
+
+    payload = {
+        "request": {
+            "assetName": "override_check",
+            "description": "蓝色史莱姆",
+            "assetType": "monster",
+            "style": "pixel_art",
+            "size": "128x128",
+            "view": "side",
+            "animation": "idle",
+            "frameCount": 1,
+            "fps": 8,
+            "exportTarget": "unity",
+        },
+        "styleProfile": {
+            "styleName": "明亮像素幻想",
+            "colorPalette": ["#2E5EAA", "#43A047", "#FDD835", "#EF5350", "#FFFFFF", "#172033"],
+            "lineStyle": "干净的深色描边",
+            "lighting": "左上方简化明暗光照",
+            "worldKeywords": "明亮幻想",
+            "negativePrompt": "水印",
+        },
+        "promptOverride": "只生成一把红色长剑，透明背景",
+    }
+
+    plan = create_plan(payload)
+    assert plan["prompt"] == "只生成一把红色长剑，透明背景"

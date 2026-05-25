@@ -3,7 +3,7 @@ import Konva from "konva";
 import { apiOrigin, useAssetStore } from "./store";
 
 function App() {
-  const { request, styleProfile, plan, asset, loading, error, setRequest, setStyleProfile, generateAsset, generatePlan } =
+  const { request, styleProfile, plan, asset, promptText, loading, error, setRequest, setStyleProfile, setPromptText, generateAsset, generatePlan } =
     useAssetStore();
   const canvasRef = useRef<HTMLDivElement | null>(null);
 
@@ -138,7 +138,15 @@ function App() {
           <div className="min-h-[520px] rounded border border-[#d8cfbf] bg-[#eef2f6] p-4">
             <div ref={canvasRef} />
           </div>
-          <pre className="mt-4 max-h-48 overflow-auto rounded border border-[#d8cfbf] bg-white p-3 text-xs whitespace-pre-wrap">{plan?.prompt ?? ""}</pre>
+          <label className="mt-4 block text-sm">
+            Prompt
+            <textarea
+              className="mt-1 h-48 w-full resize-y overflow-auto rounded border border-[#d8cfbf] bg-white p-3 font-mono text-xs"
+              value={promptText}
+              placeholder="点击“生成 Prompt”后可在这里编辑，生成素材时会使用此 Prompt。"
+              onChange={(event) => setPromptText(event.target.value)}
+            />
+          </label>
           {asset ? (
             <div className="mt-3 flex flex-wrap gap-2 text-sm">
               <a className="rounded border border-[#2f8f70] px-3 py-2 text-[#1f6d54]" href={`${downloadBase}/png`}>
