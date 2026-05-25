@@ -7,7 +7,9 @@
     "start": "powershell -ExecutionPolicy Bypass -File scripts/start-cpp.ps1",
     "start:node": "node server.js",
     "start:api": "backend\\.venv\\Scripts\\python.exe backend/run.py",
+    "start:web": "cmd /c \"cd frontend && npm run dev\"",
     "build": "powershell -ExecutionPolicy Bypass -File scripts/build-cpp.ps1",
+    "build:frontend": "cmd /c \"cd frontend && npm run build\"",
     "test": "node --test tests/*.test.js",
     "test:backend": "backend\\.venv\\Scripts\\python.exe -m pytest backend/tests",
     "test:all": "npm test && npm run test:backend"
