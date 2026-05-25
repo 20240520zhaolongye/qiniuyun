@@ -83,6 +83,11 @@ function App() {
   const paletteText = useMemo(() => styleProfile.colorPalette.join(","), [styleProfile.colorPalette]);
   const palettePreview = useMemo(() => styleProfile.colorPalette.slice(0, 6), [styleProfile.colorPalette]);
   const downloadBase = asset ? `${apiOrigin}/api/assets/${asset.id}/download` : "";
+  const updatePaletteColor = (index: number, color: string) => {
+    const nextPalette = [...styleProfile.colorPalette];
+    nextPalette[index] = color;
+    setStyleProfile({ colorPalette: nextPalette });
+  };
 
   return (
     <main className="min-h-screen bg-[linear-gradient(135deg,#f4f0e8_0%,#eef4f0_48%,#f8efd9_100%)] p-4 md:p-6">
@@ -215,9 +220,12 @@ function App() {
               onChange={(event) => setStyleProfile({ colorPalette: event.target.value.split(",").map((color) => color.trim()).filter(Boolean) })}
             />
           </label>
-          <div className="mb-3 flex gap-2">
-            {palettePreview.map((color) => (
-              <div key={color} className="h-8 w-8 rounded border" style={{ backgroundColor: color }} />
+          <div className="mb-3 grid grid-cols-3 gap-2">
+            {palettePreview.map((color, index) => (
+              <label key={`${index}-${color}`} className="flex items-center gap-2 rounded border border-[#d8cfbf] bg-white px-2 py-2 text-xs">
+                <input className="h-8 w-8 cursor-pointer rounded border-0 bg-transparent p-0" type="color" value={normalizeColorValue(color)} onChange={(event) => updatePaletteColor(index, event.target.value)} />
+                <span className="truncate font-mono">{normalizeColorValue(color).toUpperCase()}</span>
+              </label>
             ))}
           </div>
           <label className="mb-3 block text-sm">
@@ -241,6 +249,10 @@ function App() {
       </div>
     </main>
   );
+}
+
+function normalizeColorValue(color: string): string {
+  return /^#[0-9a-fA-F]{6}$/.test(color) ? color : "#2E5EAA";
 }
 
 export default App;
