@@ -156,7 +156,10 @@ npm run dev
 $env:SPRITEFORGE_AI_PROVIDER="ark"
 $env:ARK_API_KEY="你的火山方舟 API Key"
 $env:ARK_BASE_URL="https://ark.cn-beijing.volces.com/api/v3"
-$env:ARK_IMAGE_MODEL="你的图片生成模型 ID 或推理接入点 ID"
+$env:ARK_IMAGE_MODEL="ep-20260525182237-2v79h"
+$env:ARK_IMAGE_SIZE="2K"
+$env:ARK_IMAGE_RESPONSE_FORMAT="url"
+$env:ARK_IMAGE_WATERMARK="false"
 npm run dev
 ```
 
@@ -166,6 +169,9 @@ npm run dev
 - `ARK_BASE_URL`：默认 `https://ark.cn-beijing.volces.com/api/v3`。
 - `ARK_IMAGE_MODEL`：图片生成模型 ID 或推理接入点 ID，不同账号/地区可用模型可能不同，请以火山方舟控制台为准。
 - `ARK_ENDPOINT_ID`：等价备用项；如果你拿到的是推理接入点 ID，也可以设置它。
+- `ARK_IMAGE_SIZE`：火山方舟原生图片尺寸，示例为 `2K`；不设置时使用前端选择的 `128x128` 等尺寸。
+- `ARK_IMAGE_RESPONSE_FORMAT`：默认 `url`，也支持 `b64_json`。
+- `ARK_IMAGE_WATERMARK`：是否添加水印，默认 `false`。
 - `ARK_IMAGE_PATH`：默认 `/images/generations`，如果控制台文档给出的路径不同，可以覆盖。
 - `SPRITEFORGE_AI_FALLBACK=mock` 默认开启：Key、模型名、网络或额度异常时会回退 Mock，并在元数据里记录 warning。
 

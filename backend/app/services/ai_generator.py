@@ -69,15 +69,48 @@ def _call_ark_image_api(plan: dict[str, Any]) -> bytes:
 
     base_url = os.environ.get("ARK_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3").rstrip("/")
     model = os.environ.get("ARK_IMAGE_MODEL") or os.environ.get("ARK_ENDPOINT_ID") or "doubao-seedream-3-0-t2i-250415"
+    size = os.environ.get("ARK_IMAGE_SIZE") or _ark_size_from_plan(plan)
+    response_format = os.environ.get("ARK_IMAGE_RESPONSE_FORMAT", "url")
+    watermark = os.environ.get("ARK_IMAGE_WATERMARK", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+    try:
+        from openai import OpenAI
+
+        client = OpenAI(base_url=base_url, api_key=api_key)
+        response = client.images.generate(
+            model=model,
+            prompt=plan["prompt"],
+            size=size,
+            response_format=response_format,
+            extra_body={"watermark": watermark},
+        )
+        first = response.data[0]
+        if getattr(first, "b64_json", None):
+            return base64.b64decode(first.b64_json)
+        if getattr(first, "url", None):
+            with urllib.request.urlopen(first.url, timeout=float(os.environ.get("ARK_TIMEOUT_SECONDS", "120"))) as image_response:
+                return image_response.read()
+        raise AiGenerationError("火山方舟 SDK 未返回图片数据。")
+    except ImportError:
+        return _call_ark_image_api_raw(base_url, api_key, model, plan["prompt"], size, response_format, watermark)
+
+
+def _ark_size_from_plan(plan: dict[str, Any]) -> str:
+    if os.environ.get("ARK_USE_NATIVE_SIZE", "false").strip().lower() in {"1", "true", "yes", "on"}:
+        return os.environ.get("ARK_NATIVE_SIZE", "2K")
+    metadata = plan["metadata"]
+    return f"{int(metadata['frameWidth'])}x{int(metadata['frameHeight'])}"
+
+
+def _call_ark_image_api_raw(base_url: str, api_key: str, model: str, prompt: str, size: str, response_format: str, watermark: bool) -> bytes:
     timeout = float(os.environ.get("ARK_TIMEOUT_SECONDS", "120"))
     image_path = os.environ.get("ARK_IMAGE_PATH", "/images/generations")
-    metadata = plan["metadata"]
-    size = f"{int(metadata['frameWidth'])}x{int(metadata['frameHeight'])}"
     body = {
         "model": model,
-        "prompt": plan["prompt"],
+        "prompt": prompt,
         "size": size,
-        "response_format": "b64_json",
+        "response_format": response_format,
+        "watermark": watermark,
     }
     request = urllib.request.Request(
         f"{base_url}{image_path}",
