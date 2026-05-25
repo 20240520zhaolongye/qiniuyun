@@ -10,6 +10,12 @@ $env:ARK_IMAGE_RESPONSE_FORMAT = if ($env:ARK_IMAGE_RESPONSE_FORMAT) { $env:ARK_
 $env:ARK_IMAGE_WATERMARK = if ($env:ARK_IMAGE_WATERMARK) { $env:ARK_IMAGE_WATERMARK } else { "false" }
 
 if (!$env:ARK_API_KEY) {
+  $env:ARK_API_KEY = [Environment]::GetEnvironmentVariable("ARK_API_KEY", "User")
+}
+if (!$env:ARK_API_KEY) {
+  $env:ARK_API_KEY = [Environment]::GetEnvironmentVariable("ARK_API_KEY", "Machine")
+}
+if (!$env:ARK_API_KEY) {
   throw "ARK_API_KEY is required. Set it first: `$env:ARK_API_KEY='your_api_key'"
 }
 

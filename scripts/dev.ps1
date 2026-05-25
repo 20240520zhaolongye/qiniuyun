@@ -53,6 +53,12 @@ foreach ($name in @(
   "ARK_TIMEOUT_SECONDS"
 )) {
   $value = [Environment]::GetEnvironmentVariable($name, "Process")
+  if (($null -eq $value -or $value -eq "") -and $name -eq "ARK_API_KEY") {
+    $value = [Environment]::GetEnvironmentVariable($name, "User")
+  }
+  if (($null -eq $value -or $value -eq "") -and $name -eq "ARK_API_KEY") {
+    $value = [Environment]::GetEnvironmentVariable($name, "Machine")
+  }
   if ($null -ne $value -and $value -ne "") {
     $escaped = $value.Replace("'", "''")
     $apiEnvCommand += " `$env:$name='$escaped';"

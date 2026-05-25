@@ -188,6 +188,43 @@ def test_ai_generator_raises_when_ark_unconfigured_without_fallback(tmp_path, mo
         save_outputs(plan, tmp_path)
 
 
+def test_ai_generator_defaults_to_ark_without_key(tmp_path, monkeypatch):
+    import pytest
+
+    from app.services.ai_generator import AiGenerationError, save_outputs
+
+    monkeypatch.delenv("SPRITEFORGE_AI_PROVIDER", raising=False)
+    monkeypatch.delenv("SPRITEFORGE_AI_FALLBACK", raising=False)
+    monkeypatch.delenv("ARK_API_KEY", raising=False)
+    monkeypatch.delenv("VOLCENGINE_API_KEY", raising=False)
+
+    plan = {
+        "seed": 1,
+        "prompt": "测试默认 Ark",
+        "metadata": {
+            "assetName": "default_ark_check",
+            "assetType": "monster",
+            "style": "pixel_art",
+            "frameWidth": 128,
+            "frameHeight": 128,
+            "frameCount": 1,
+            "animationName": "idle",
+            "fps": 8,
+        },
+        "draw": {
+            "assetType": "monster",
+            "description": "测试",
+            "assetName": "default_ark_check",
+            "palette": ["#2E5EAA"],
+            "view": "side",
+            "animation": "idle",
+        },
+    }
+
+    with pytest.raises(AiGenerationError):
+        save_outputs(plan, tmp_path)
+
+
 def test_ai_generator_can_explicitly_fallback_to_mock_when_ark_unconfigured(tmp_path, monkeypatch):
     from app.services.ai_generator import save_outputs
 

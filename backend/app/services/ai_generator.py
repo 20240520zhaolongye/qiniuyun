@@ -20,7 +20,7 @@ class AiGenerationError(RuntimeError):
 
 
 def save_outputs(plan: dict[str, Any], output_dir: Path) -> dict[str, str]:
-    provider = os.environ.get("SPRITEFORGE_AI_PROVIDER", "mock").strip().lower()
+    provider = os.environ.get("SPRITEFORGE_AI_PROVIDER", "ark").strip().lower()
     if provider in {"comfyui", "ark"}:
         try:
             if provider == "ark":
